@@ -51,8 +51,16 @@ public abstract class CrudController {
 
     @PutMapping("/{value}")
     public ResponseEntity<?> update(@PathVariable int value, @RequestBody Map<String, Object> body) {
+        if (body.containsKey(id())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No se permite modificar el identificador de la entidad"));
+        }
+
         try {
-            return service.update(table(), id(), value, body) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+            return service.update(table(), id(), value, body)
+                    ? ResponseEntity.noContent().build()
+                    : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (SQLException e) {
             return ResponseEntity.status(409).build();
         }

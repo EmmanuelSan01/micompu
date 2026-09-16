@@ -30,6 +30,9 @@ public class JdbcCrudService {
     }
 
     public boolean update(String table, String id, int value, Map<String, Object> data) throws SQLException {
+        if (data == null || data.isEmpty()) {
+            throw new IllegalArgumentException("El cuerpo no puede estar vacío");
+        }
         return repo.update(table, id, value, data) > 0;
     }
 

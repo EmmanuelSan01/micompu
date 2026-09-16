@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MicompuApplication {
+public class MiCompuApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MicompuApplication.class, args);
+		SpringApplication.run(MiCompuApplication.class, args);
 	}
 
 }

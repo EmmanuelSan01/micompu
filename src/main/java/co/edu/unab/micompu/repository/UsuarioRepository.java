@@ -22,15 +22,16 @@ public class UsuarioRepository {
     private static final String SQL_UPDATE =
             "UPDATE usuario SET id_rol = ?, email = ?, nombre = ?, password_hash = ?, estado = ?"
                     + " WHERE id_usuario = ?";
+    /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE =
-            "DELETE FROM usuario WHERE id_usuario = ?";
+            "UPDATE usuario SET estado = FALSE WHERE id_usuario = ?";
     private static final String SQL_EXISTS =
-            "SELECT 1 FROM usuario WHERE id_usuario = ?";
+            "SELECT 1 FROM usuario WHERE id_usuario = ? AND estado = TRUE";
 
-    /** Devuelve todos los usuarios. */
+    /** Devuelve todos los usuarios activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Usuario> findAll(Connection cn) throws SQLException {
         List<Usuario> usuarios = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY id_usuario");
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_usuario");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 usuarios.add(mapear(rs));
@@ -39,7 +40,7 @@ public class UsuarioRepository {
         return usuarios;
     }
 
-    /** Busca un usuario por su clave primaria {@code id_usuario}. */
+    /** Busca un usuario por su clave primaria {@code id_usuario} (incluye inactivos: el borrado es lógico). */
     public Optional<Usuario> findById(Connection cn, int idUsuario) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_usuario = ?")) {
             ps.setInt(1, idUsuario);
@@ -80,7 +81,7 @@ public class UsuarioRepository {
         }
     }
 
-    /** Elimina un usuario por su {@code id_usuario}; indica si la fila existía. */
+    /** Borrado lógico (soft delete) del usuario por su {@code id_usuario} */
     public boolean delete(Connection cn, int idUsuario) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idUsuario);
@@ -88,7 +89,7 @@ public class UsuarioRepository {
         }
     }
 
-    /** Indica si existe un usuario con el id dado. */
+    /** Indica si existe un usuario activo con el id dado (los inactivos no cuentan). */
     public boolean exists(Connection cn, int idUsuario) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_EXISTS)) {
             ps.setInt(1, idUsuario);

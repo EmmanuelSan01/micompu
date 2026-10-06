@@ -80,8 +80,12 @@ public class ReservaService {
                 int idUsuario = reserva.getUsuario().getIdUsuario();
                 int idEquipo = reserva.getEquipo().getIdEquipo();
 
-                usuarioRepository.findById(cn, idUsuario)
+                Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
+                if (!usuario.isEstado()) {
+                    // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
+                    throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
+                }
                 Equipo equipo = equipoRepository.findById(cn, idEquipo)
                         .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
                 if (!equipo.isEstado()) {
@@ -130,8 +134,12 @@ public class ReservaService {
                 int idUsuario = reserva.getUsuario().getIdUsuario();
                 int idEquipo = reserva.getEquipo().getIdEquipo();
 
-                usuarioRepository.findById(cn, idUsuario)
+                Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
+                if (!usuario.isEstado()) {
+                    // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
+                    throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
+                }
                 Equipo equipo = equipoRepository.findById(cn, idEquipo)
                         .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
                 if (!equipo.isEstado()) {
@@ -169,7 +177,11 @@ public class ReservaService {
         }
     }
 
-    /** Elimina una reserva (404 si no existe). El equipo reservado permanece (agregación). */
+    /**
+     * Elimina una reserva (404 si no existe). Su borrado es físico —no
+     * lógico— porque la tabla {@code reserva} no tiene columna {@code estado}
+     * en el DDL. El equipo reservado permanece (agregación).
+     */
     public void eliminar(Integer idReserva) {
         validarId(idReserva);
         try (Connection cn = conexion.obtener()) {

@@ -21,17 +21,18 @@ public class EquipoRepository {
             "INSERT INTO equipo (id_sala, estado) VALUES (?, ?)";
     private static final String SQL_UPDATE =
             "UPDATE equipo SET id_sala = ?, estado = ? WHERE id_equipo = ?";
+    /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE =
-            "DELETE FROM equipo WHERE id_equipo = ?";
+            "UPDATE equipo SET estado = FALSE WHERE id_equipo = ?";
     private static final String SQL_DELETE_BY_SALA =
-            "DELETE FROM equipo WHERE id_sala = ?";
+            "UPDATE equipo SET estado = FALSE WHERE id_sala = ?";
     private static final String SQL_EXISTS =
-            "SELECT 1 FROM equipo WHERE id_equipo = ?";
+            "SELECT 1 FROM equipo WHERE id_equipo = ? AND estado = TRUE";
 
-    /** Devuelve todos los equipos. */
+    /** Devuelve todos los equipos activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Equipo> findAll(Connection cn) throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY id_equipo");
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_equipo");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 equipos.add(mapear(rs));
@@ -40,7 +41,7 @@ public class EquipoRepository {
         return equipos;
     }
 
-    /** Busca un equipo por su clave primaria {@code id_equipo}. */
+    /** Busca un equipo por su clave primaria {@code id_equipo} (incluye inactivos: el borrado es lógico). */
     public Optional<Equipo> findById(Connection cn, int idEquipo) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_equipo = ?")) {
             ps.setInt(1, idEquipo);
@@ -50,10 +51,11 @@ public class EquipoRepository {
         }
     }
 
-    /** Devuelve los equipos (partes) de una sala (todo). */
+    /** Devuelve los equipos (partes) activos de una sala (todo). */
     public List<Equipo> findBySala(Connection cn, int idSala) throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_sala = ? ORDER BY id_equipo")) {
+        try (PreparedStatement ps = cn.prepareStatement(
+                SQL_SELECT + " WHERE id_sala = ? AND estado = TRUE ORDER BY id_equipo")) {
             ps.setInt(1, idSala);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -89,7 +91,7 @@ public class EquipoRepository {
         }
     }
 
-    /** Elimina un equipo por su {@code id_equipo}; indica si la fila existía. */
+    /** Borrado lógico (soft delete) del equipo por su {@code id_equipo} */
     public boolean delete(Connection cn, int idEquipo) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idEquipo);
@@ -97,7 +99,7 @@ public class EquipoRepository {
         }
     }
 
-    /** Elimina todos los equipos de una sala (composición); devuelve las filas borradas. */
+    /** Borrado lógico (soft delete) de los equipos de una sala (composición): marca {@code estado = FALSE}; devuelve las filas afectadas. */
     public int deleteBySala(Connection cn, int idSala) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE_BY_SALA)) {
             ps.setInt(1, idSala);
@@ -105,7 +107,7 @@ public class EquipoRepository {
         }
     }
 
-    /** Indica si existe un equipo con el id dado. */
+    /** Indica si existe un equipo activo con el id dado (los inactivos no cuentan). */
     public boolean exists(Connection cn, int idEquipo) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_EXISTS)) {
             ps.setInt(1, idEquipo);

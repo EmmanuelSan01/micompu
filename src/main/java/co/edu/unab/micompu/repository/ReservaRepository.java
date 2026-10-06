@@ -27,12 +27,12 @@ public class ReservaRepository {
     private static final String SQL_UPDATE =
             "UPDATE reserva SET id_usuario = ?, id_equipo = ?, fecha = ?, hora_inicio = ?,"
                     + " hora_fin = ? WHERE id_reserva = ?";
+    /**
+     * Borrado físico de reservas: la tabla {@code reserva} no tiene columna
+     * {@code estado} en el DDL, por lo que su eliminación no puede ser lógica.
+     */
     private static final String SQL_DELETE =
             "DELETE FROM reserva WHERE id_reserva = ?";
-    private static final String SQL_DELETE_BY_USUARIO =
-            "DELETE FROM reserva WHERE id_usuario = ?";
-    private static final String SQL_DELETE_BY_EQUIPO =
-            "DELETE FROM reserva WHERE id_equipo = ?";
     private static final String SQL_EXISTS =
             "SELECT 1 FROM reserva WHERE id_reserva = ?";
     private static final String SQL_SOLAPADA =
@@ -92,27 +92,16 @@ public class ReservaRepository {
         }
     }
 
-    /** Elimina una reserva por su {@code id_reserva}; indica si la fila existía. */
+    /**
+     * Borrado físico de una reserva por su {@code id_reserva}; indica si la
+     * fila existía. A diferencia del resto de tablas, {@code reserva} no
+     * tiene columna {@code estado} en el DDL, por lo que su eliminación no
+     * puede ser lógica.
+     */
     public boolean delete(Connection cn, int idReserva) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idReserva);
             return ps.executeUpdate() > 0;
-        }
-    }
-
-    /** Elimina todas las reservas de un usuario; devuelve las filas borradas. */
-    public int deleteByUsuario(Connection cn, int idUsuario) throws SQLException {
-        try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE_BY_USUARIO)) {
-            ps.setInt(1, idUsuario);
-            return ps.executeUpdate();
-        }
-    }
-
-    /** Elimina todas las reservas de un equipo; devuelve las filas borradas. */
-    public int deleteByEquipo(Connection cn, int idEquipo) throws SQLException {
-        try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE_BY_EQUIPO)) {
-            ps.setInt(1, idEquipo);
-            return ps.executeUpdate();
         }
     }
 

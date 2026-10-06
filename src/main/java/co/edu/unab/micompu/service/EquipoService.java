@@ -11,7 +11,6 @@ import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
-import co.edu.unab.micompu.repository.ReservaRepository;
 import co.edu.unab.micompu.repository.RolRepository;
 import co.edu.unab.micompu.repository.SalaRepository;
 import co.edu.unab.micompu.repository.UsuarioRepository;
@@ -24,17 +23,15 @@ public class EquipoService {
     private final SalaRepository salaRepository;
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
-    private final ReservaRepository reservaRepository;
 
     public EquipoService(ConexionBD conexion, EquipoRepository equipoRepository,
                         SalaRepository salaRepository, UsuarioRepository usuarioRepository,
-                        RolRepository rolRepository, ReservaRepository reservaRepository) {
+                        RolRepository rolRepository) {
         this.conexion = conexion;
         this.equipoRepository = equipoRepository;
         this.salaRepository = salaRepository;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
-        this.reservaRepository = reservaRepository;
     }
 
     /** Devuelve todos los equipos con su sala completa (composición). */
@@ -71,7 +68,8 @@ public class EquipoService {
             cn.setAutoCommit(false);
             try {
                 if (!salaRepository.exists(cn, equipo.getSala().getIdSala())) {
-                    throw new NoSuchElementException("Sala no encontrada: " + equipo.getSala().getIdSala());
+                    throw new NoSuchElementException(
+                            "Sala no encontrada o inactiva: " + equipo.getSala().getIdSala());
                 }
                 Equipo creado = equipoRepository.insert(cn, equipo);
                 completarSala(cn, creado);
@@ -102,7 +100,8 @@ public class EquipoService {
             cn.setAutoCommit(false);
             try {
                 if (!salaRepository.exists(cn, equipo.getSala().getIdSala())) {
-                    throw new NoSuchElementException("Sala no encontrada: " + equipo.getSala().getIdSala());
+                    throw new NoSuchElementException(
+                            "Sala no encontrada o inactiva: " + equipo.getSala().getIdSala());
                 }
                 if (!equipoRepository.update(cn, equipo)) {
                     throw new NoSuchElementException("Equipo no encontrado: " + idEquipo);
@@ -126,30 +125,20 @@ public class EquipoService {
     }
 
     /**
-     * Elimina un equipo arrastrando primero sus reservas (transacción manual):
-     * la FK {@code fk_reserva_equipo} (ON DELETE RESTRICT) exige eliminar las
-     * reservas antes que el equipo.
+     * Desactiva un equipo (borrado lógico: {@code estado = FALSE}; 404 si no
+     * existe). Como la fila ya no se borra físicamente, la FK
+     * {@code fk_reserva_equipo} (ON DELETE RESTRICT) ya no exige borrar sus
+     * reservas: el equipo sigue existiendo (inactivo) y sus reservas se
+     * conservan como histórico.
      */
     public void eliminar(Integer idEquipo) {
         validarId(idEquipo);
         try (Connection cn = conexion.obtener()) {
-            cn.setAutoCommit(false);
-            try {
-                if (!equipoRepository.exists(cn, idEquipo)) {
-                    throw new NoSuchElementException("Equipo no encontrado: " + idEquipo);
-                }
-                reservaRepository.deleteByEquipo(cn, idEquipo);
-                equipoRepository.delete(cn, idEquipo);
-                cn.commit();
-            } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
-                throw new RuntimeException("Error eliminando el equipo " + idEquipo + ": " + e.getMessage(), e);
-            } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
-                throw e;
+            if (!equipoRepository.delete(cn, idEquipo)) {
+                throw new NoSuchElementException("Equipo no encontrado: " + idEquipo);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("No fue posible conectar con la base de datos: " + e.getMessage(), e);
+            throw new RuntimeException("Error eliminando el equipo " + idEquipo + ": " + e.getMessage(), e);
         }
     }
 

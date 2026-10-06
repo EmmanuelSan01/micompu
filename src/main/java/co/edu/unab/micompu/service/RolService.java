@@ -2,7 +2,6 @@ package co.edu.unab.micompu.service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
@@ -66,17 +65,19 @@ public class RolService {
         }
     }
 
-    /** Elimina un rol (409 si tiene usuarios asignados, por la FK RESTRICT). */
+    /**
+     * Desactiva un rol (borrado lógico: {@code estado = FALSE}; 404 si no
+     * existe). Como la fila ya no se borra físicamente, la FK
+     * {@code fk_usuario_rol} (ON DELETE RESTRICT) ya no bloquea la operación:
+     * el rol puede quedar inactivo aunque tenga usuarios asignados, que
+     * seguirán referenciándolo y resolviéndolo por su id.
+     */
     public void eliminar(Integer idRol) {
         validarId(idRol);
         try (Connection cn = conexion.obtener()) {
             if (!rolRepository.delete(cn, idRol)) {
                 throw new NoSuchElementException("Rol no encontrado: " + idRol);
             }
-        } catch (SQLIntegrityConstraintViolationException e) {
-            // FK fk_usuario_rol (ON DELETE RESTRICT): el rol está asignado a usuarios.
-            throw new IllegalStateException(
-                    "El rol está asignado a uno o más usuarios y no puede eliminarse.", e);
         } catch (SQLException e) {
             throw new RuntimeException("Error eliminando el rol " + idRol + ": " + e.getMessage(), e);
         }

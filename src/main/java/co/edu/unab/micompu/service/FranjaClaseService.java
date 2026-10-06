@@ -70,7 +70,7 @@ public class FranjaClaseService {
             try {
                 int idSala = franja.getSala().getIdSala();
                 if (!salaRepository.exists(cn, idSala)) {
-                    throw new NoSuchElementException("Sala no encontrada: " + idSala);
+                    throw new NoSuchElementException("Sala no encontrada o inactiva: " + idSala);
                 }
                 if (franjaClaseRepository.existsSolapada(cn, idSala, franja.getDiaSemana(),
                         franja.getHoraInicio(), franja.getHoraFin(), null)) {
@@ -107,7 +107,7 @@ public class FranjaClaseService {
             try {
                 int idSala = franja.getSala().getIdSala();
                 if (!salaRepository.exists(cn, idSala)) {
-                    throw new NoSuchElementException("Sala no encontrada: " + idSala);
+                    throw new NoSuchElementException("Sala no encontrada o inactiva: " + idSala);
                 }
                 if (franjaClaseRepository.existsSolapada(cn, idSala, franja.getDiaSemana(),
                         franja.getHoraInicio(), franja.getHoraFin(), idFranjaClase)) {
@@ -136,7 +136,7 @@ public class FranjaClaseService {
         }
     }
 
-    /** Elimina una franja (404 si no existe). */
+    /** Desactiva una franja (borrado lógico: {@code estado = FALSE}; 404 si no existe). */
     public void eliminar(Integer idFranjaClase) {
         validarId(idFranjaClase);
         try (Connection cn = conexion.obtener()) {

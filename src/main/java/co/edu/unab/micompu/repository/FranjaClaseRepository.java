@@ -26,20 +26,22 @@ public class FranjaClaseRepository {
     private static final String SQL_UPDATE =
             "UPDATE franja_clase SET id_sala = ?, dia_semana = ?, hora_inicio = ?, hora_fin = ?,"
                     + " motivo = ?, estado = ? WHERE id_franja_clase = ?";
+    /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE =
-            "DELETE FROM franja_clase WHERE id_franja_clase = ?";
+            "UPDATE franja_clase SET estado = FALSE WHERE id_franja_clase = ?";
     private static final String SQL_DELETE_BY_SALA =
-            "DELETE FROM franja_clase WHERE id_sala = ?";
+            "UPDATE franja_clase SET estado = FALSE WHERE id_sala = ?";
     private static final String SQL_EXISTS =
-            "SELECT 1 FROM franja_clase WHERE id_franja_clase = ?";
+            "SELECT 1 FROM franja_clase WHERE id_franja_clase = ? AND estado = TRUE";
     private static final String SQL_SOLAPADA =
-            "SELECT 1 FROM franja_clase WHERE id_sala = ? AND dia_semana = ? AND estado = 1"
+            "SELECT 1 FROM franja_clase WHERE id_sala = ? AND dia_semana = ? AND estado = TRUE"
                     + " AND hora_inicio < ? AND hora_fin > ?";
 
-    /** Devuelve todas las franjas de clase. */
+    /** Devuelve todas las franjas de clase activas (las inactivas quedan ocultas por el borrado lógico). */
     public List<FranjaClase> findAll(Connection cn) throws SQLException {
         List<FranjaClase> franjas = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY id_sala, dia_semana, hora_inicio");
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE"
+                + " ORDER BY id_sala, dia_semana, hora_inicio");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 franjas.add(mapear(rs));
@@ -48,7 +50,7 @@ public class FranjaClaseRepository {
         return franjas;
     }
 
-    /** Busca una franja por su clave primaria {@code id_franja_clase}. */
+    /** Busca una franja por su clave primaria {@code id_franja_clase} (incluye inactivas: el borrado es lógico). */
     public Optional<FranjaClase> findById(Connection cn, int idFranjaClase) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_franja_clase = ?")) {
             ps.setInt(1, idFranjaClase);
@@ -58,11 +60,11 @@ public class FranjaClaseRepository {
         }
     }
 
-    /** Devuelve las franjas (partes) del horario de una sala (todo). */
+    /** Devuelve las franjas (partes) activas del horario de una sala (todo). */
     public List<FranjaClase> findBySala(Connection cn, int idSala) throws SQLException {
         List<FranjaClase> franjas = new ArrayList<>();
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_sala = ?"
-                + " ORDER BY dia_semana, hora_inicio")) {
+                + " AND estado = TRUE ORDER BY dia_semana, hora_inicio")) {
             ps.setInt(1, idSala);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -106,7 +108,7 @@ public class FranjaClaseRepository {
         }
     }
 
-    /** Elimina una franja por su {@code id_franja_clase}; indica si la fila existía. */
+    /** Borrado lógico (soft delete) de la franja por su {@code id_franja_clase} */
     public boolean delete(Connection cn, int idFranjaClase) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idFranjaClase);
@@ -114,7 +116,7 @@ public class FranjaClaseRepository {
         }
     }
 
-    /** Elimina todas las franjas de una sala (composición); devuelve las filas borradas. */
+    /** Borrado lógico (soft delete) de las franjas de una sala (composición): marca {@code estado = FALSE}; devuelve las filas afectadas. */
     public int deleteBySala(Connection cn, int idSala) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE_BY_SALA)) {
             ps.setInt(1, idSala);
@@ -122,7 +124,7 @@ public class FranjaClaseRepository {
         }
     }
 
-    /** Indica si existe una franja con el id dado. */
+    /** Indica si existe una franja activa con el id dado (las inactivas no cuentan). */
     public boolean exists(Connection cn, int idFranjaClase) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_EXISTS)) {
             ps.setInt(1, idFranjaClase);

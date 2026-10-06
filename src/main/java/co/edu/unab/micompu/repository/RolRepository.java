@@ -20,15 +20,16 @@ public class RolRepository {
             "INSERT INTO rol (nombre, estado) VALUES (?, ?)";
     private static final String SQL_UPDATE =
             "UPDATE rol SET nombre = ?, estado = ? WHERE id_rol = ?";
+    /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE =
-            "DELETE FROM rol WHERE id_rol = ?";
+            "UPDATE rol SET estado = FALSE WHERE id_rol = ?";
     private static final String SQL_EXISTS =
-            "SELECT 1 FROM rol WHERE id_rol = ?";
+            "SELECT 1 FROM rol WHERE id_rol = ? AND estado = TRUE";
 
-    /** Devuelve todos los roles. */
+    /** Devuelve todos los roles activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Rol> findAll(Connection cn) throws SQLException {
         List<Rol> roles = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY id_rol");
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_rol");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 roles.add(mapear(rs));
@@ -37,7 +38,7 @@ public class RolRepository {
         return roles;
     }
 
-    /** Busca un rol por su clave primaria {@code id_rol}. */
+    /** Busca un rol por su clave primaria {@code id_rol} (incluye inactivos: el borrado es lógico). */
     public Optional<Rol> findById(Connection cn, int idRol) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_rol = ?")) {
             ps.setInt(1, idRol);
@@ -72,7 +73,7 @@ public class RolRepository {
         }
     }
 
-    /** Elimina un rol por su {@code id_rol}; indica si la fila existía. */
+    /** Borrado lógico (soft delete) del rol por su {@code id_rol} */
     public boolean delete(Connection cn, int idRol) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idRol);
@@ -80,7 +81,7 @@ public class RolRepository {
         }
     }
 
-    /** Indica si existe un rol con el id dado. */
+    /** Indica si existe un rol activo con el id dado (los inactivos no cuentan). */
     public boolean exists(Connection cn, int idRol) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_EXISTS)) {
             ps.setInt(1, idRol);

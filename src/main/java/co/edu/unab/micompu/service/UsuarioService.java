@@ -8,7 +8,6 @@ import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 import co.edu.unab.micompu.entity.Usuario;
 import co.edu.unab.micompu.repository.ConexionBD;
-import co.edu.unab.micompu.repository.ReservaRepository;
 import co.edu.unab.micompu.repository.RolRepository;
 import co.edu.unab.micompu.repository.UsuarioRepository;
 
@@ -18,14 +17,12 @@ public class UsuarioService {
     private final ConexionBD conexion;
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
-    private final ReservaRepository reservaRepository;
 
     public UsuarioService(ConexionBD conexion, UsuarioRepository usuarioRepository,
-                         RolRepository rolRepository, ReservaRepository reservaRepository) {
+                         RolRepository rolRepository) {
         this.conexion = conexion;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
-        this.reservaRepository = reservaRepository;
     }
 
     /** Devuelve todos los usuarios con su rol resuelto (asociación). */
@@ -62,7 +59,8 @@ public class UsuarioService {
             cn.setAutoCommit(false);
             try {
                 if (!rolRepository.exists(cn, usuario.getRol().getIdRol())) {
-                    throw new NoSuchElementException("Rol no encontrado: " + usuario.getRol().getIdRol());
+                    throw new NoSuchElementException(
+                            "Rol no encontrado o inactivo: " + usuario.getRol().getIdRol());
                 }
                 Usuario creado = usuarioRepository.insert(cn, usuario);
                 completarRol(cn, creado);
@@ -94,7 +92,8 @@ public class UsuarioService {
             cn.setAutoCommit(false);
             try {
                 if (!rolRepository.exists(cn, usuario.getRol().getIdRol())) {
-                    throw new NoSuchElementException("Rol no encontrado: " + usuario.getRol().getIdRol());
+                    throw new NoSuchElementException(
+                            "Rol no encontrado o inactivo: " + usuario.getRol().getIdRol());
                 }
                 if (!usuarioRepository.update(cn, usuario)) {
                     throw new NoSuchElementException("Usuario no encontrado: " + idUsuario);
@@ -119,36 +118,22 @@ public class UsuarioService {
     }
 
     /**
-     * Elimina un usuario arrastrando primero sus reservas (transacción
-     * manual). Si el usuario es responsable de salas, la FK
-     * {@code fk_sala_responsable} (ON DELETE RESTRICT) bloquea la operación
-     * y se devuelve un conflicto.
+     * Desactiva un usuario (borrado lógico: {@code estado = FALSE}; 404 si no
+     * existe). Como la fila ya no se borra físicamente, la FK
+     * {@code fk_sala_responsable} (ON DELETE RESTRICT) ya no bloquea la
+     * operación: el usuario puede quedar inactivo aunque sea responsable de
+     * salas (que seguirán resolviéndolo por su id). Sus reservas se conservan
+     * como histórico: la tabla reserva no tiene columna {@code estado} y el
+     * borrado lógico del usuario no exige tocarlas.
      */
     public void eliminar(Integer idUsuario) {
         validarId(idUsuario);
         try (Connection cn = conexion.obtener()) {
-            cn.setAutoCommit(false);
-            try {
-                if (!usuarioRepository.exists(cn, idUsuario)) {
-                    throw new NoSuchElementException("Usuario no encontrado: " + idUsuario);
-                }
-                reservaRepository.deleteByUsuario(cn, idUsuario);
-                usuarioRepository.delete(cn, idUsuario);
-                cn.commit();
-            } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
-                if (e instanceof SQLIntegrityConstraintViolationException) {
-                    // FK fk_sala_responsable (ON DELETE RESTRICT).
-                    throw new IllegalStateException(
-                            "El usuario es responsable de una o más salas; reasigne o elimine las salas primero.", e);
-                }
-                throw new RuntimeException("Error eliminando el usuario " + idUsuario + ": " + e.getMessage(), e);
-            } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
-                throw e;
+            if (!usuarioRepository.delete(cn, idUsuario)) {
+                throw new NoSuchElementException("Usuario no encontrado: " + idUsuario);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("No fue posible conectar con la base de datos: " + e.getMessage(), e);
+            throw new RuntimeException("Error eliminando el usuario " + idUsuario + ": " + e.getMessage(), e);
         }
     }
 

@@ -22,15 +22,16 @@ public class SalaRepository {
     private static final String SQL_UPDATE =
             "UPDATE sala SET id_responsable = ?, nombre = ?, capacidad = ?, estado = ?"
                     + " WHERE id_sala = ?";
+    /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE =
-            "DELETE FROM sala WHERE id_sala = ?";
+            "UPDATE sala SET estado = FALSE WHERE id_sala = ?";
     private static final String SQL_EXISTS =
-            "SELECT 1 FROM sala WHERE id_sala = ?";
+            "SELECT 1 FROM sala WHERE id_sala = ? AND estado = TRUE";
 
-    /** Devuelve todas las salas. */
+    /** Devuelve todas las salas activas (las inactivas quedan ocultas por el borrado lógico). */
     public List<Sala> findAll(Connection cn) throws SQLException {
         List<Sala> salas = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY id_sala");
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_sala");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 salas.add(mapear(rs));
@@ -39,7 +40,7 @@ public class SalaRepository {
         return salas;
     }
 
-    /** Busca una sala por su clave primaria {@code id_sala}. */
+    /** Busca una sala por su clave primaria {@code id_sala} (incluye inactivas: el borrado es lógico). */
     public Optional<Sala> findById(Connection cn, int idSala) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_sala = ?")) {
             ps.setInt(1, idSala);
@@ -78,7 +79,7 @@ public class SalaRepository {
         }
     }
 
-    /** Elimina una sala por su {@code id_sala}; indica si la fila existía. */
+    /** Borrado lógico (soft delete) de la sala por su {@code id_sala} */
     public boolean delete(Connection cn, int idSala) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_DELETE)) {
             ps.setInt(1, idSala);
@@ -86,7 +87,7 @@ public class SalaRepository {
         }
     }
 
-    /** Indica si existe una sala con el id dado. */
+    /** Indica si existe una sala activa con el id dado (las inactivas no cuentan). */
     public boolean exists(Connection cn, int idSala) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_EXISTS)) {
             ps.setInt(1, idSala);

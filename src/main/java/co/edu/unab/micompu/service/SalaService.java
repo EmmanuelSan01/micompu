@@ -13,7 +13,6 @@ import co.edu.unab.micompu.entity.Usuario;
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
 import co.edu.unab.micompu.repository.FranjaClaseRepository;
-import co.edu.unab.micompu.repository.ReservaRepository;
 import co.edu.unab.micompu.repository.RolRepository;
 import co.edu.unab.micompu.repository.SalaRepository;
 import co.edu.unab.micompu.repository.UsuarioRepository;
@@ -27,19 +26,16 @@ public class SalaService {
     private final RolRepository rolRepository;
     private final EquipoRepository equipoRepository;
     private final FranjaClaseRepository franjaClaseRepository;
-    private final ReservaRepository reservaRepository;
 
     public SalaService(ConexionBD conexion, SalaRepository salaRepository,
                       UsuarioRepository usuarioRepository, RolRepository rolRepository,
-                      EquipoRepository equipoRepository, FranjaClaseRepository franjaClaseRepository,
-                      ReservaRepository reservaRepository) {
+                      EquipoRepository equipoRepository, FranjaClaseRepository franjaClaseRepository) {
         this.conexion = conexion;
         this.salaRepository = salaRepository;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.equipoRepository = equipoRepository;
         this.franjaClaseRepository = franjaClaseRepository;
-        this.reservaRepository = reservaRepository;
     }
 
     /** Devuelve todas las salas con su responsable resuelto (asociación). */
@@ -113,7 +109,7 @@ public class SalaService {
             try {
                 if (!usuarioRepository.exists(cn, sala.getResponsable().getIdUsuario())) {
                     throw new NoSuchElementException(
-                            "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario());
+                            "Usuario responsable no encontrado o inactivo: " + sala.getResponsable().getIdUsuario());
                 }
                 Sala creada = salaRepository.insert(cn, sala);
                 completarResponsable(cn, creada);
@@ -146,7 +142,7 @@ public class SalaService {
             try {
                 if (!usuarioRepository.exists(cn, sala.getResponsable().getIdUsuario())) {
                     throw new NoSuchElementException(
-                            "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario());
+                            "Usuario responsable no encontrado o inactivo: " + sala.getResponsable().getIdUsuario());
                 }
                 if (!salaRepository.update(cn, sala)) {
                     throw new NoSuchElementException("Sala no encontrada: " + idSala);
@@ -171,26 +167,25 @@ public class SalaService {
     }
 
     /**
-     * Elimina la sala (el "todo") arrastrando el ciclo de vida de sus partes:
-     * primero las reservas de sus equipos, luego sus franjas y sus equipos y,
-     * por último, la propia sala. Todo dentro de una transacción manual
-     * (commit si todo sale bien; rollback y estado consistente si algo falla).
+     * Elimina la sala (el "todo") arrastrando el ciclo de vida de sus partes
+     * (composición): desactiva sus franjas, sus equipos y la propia sala
+     * (borrado lógico: {@code estado = FALSE}) dentro de una transacción
+     * manual (commit si todo sale bien; rollback y estado consistente si
+     * algo falla). Las reservas de los equipos no se tocan: como el borrado
+     * es lógico, las filas de los equipos siguen existiendo y la FK
+     * {@code fk_reserva_equipo} se conserva — las reservas quedan como
+     * histórico de equipos inactivos.
      */
     public void eliminar(Integer idSala) {
         validarId(idSala);
         try (Connection cn = conexion.obtener()) {
             cn.setAutoCommit(false);
             try {
-                if (!salaRepository.exists(cn, idSala)) {
-                    throw new NoSuchElementException("Sala no encontrada: " + idSala);
-                }
-                List<Equipo> equipos = equipoRepository.findBySala(cn, idSala);
-                for (Equipo equipo : equipos) {
-                    reservaRepository.deleteByEquipo(cn, equipo.getIdEquipo());
-                }
                 franjaClaseRepository.deleteBySala(cn, idSala);
                 equipoRepository.deleteBySala(cn, idSala);
-                salaRepository.delete(cn, idSala);
+                if (!salaRepository.delete(cn, idSala)) {
+                    throw new NoSuchElementException("Sala no encontrada: " + idSala);
+                }
                 cn.commit();
             } catch (SQLException e) {
                 try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }

@@ -5,35 +5,37 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.Equipo;
 import co.edu.unab.micompu.entity.Sala;
 
 @Repository
 public class EquipoRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_equipo, id_sala, estado FROM equipo";
-    private static final String SQL_INSERT =
-            "INSERT INTO equipo (id_sala, estado) VALUES (?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE equipo SET id_sala = ?, estado = ? WHERE id_equipo = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_equipo, id_sala, estado FROM equipo";
+    private static final String SQL_INSERT
+            = "INSERT INTO equipo (id_sala, estado) VALUES (?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE equipo SET id_sala = ?, estado = ? WHERE id_equipo = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
-    private static final String SQL_DELETE =
-            "UPDATE equipo SET estado = FALSE WHERE id_equipo = ?";
-    private static final String SQL_DELETE_BY_SALA =
-            "UPDATE equipo SET estado = FALSE WHERE id_sala = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM equipo WHERE id_equipo = ? AND estado = TRUE";
+    private static final String SQL_DELETE
+            = "UPDATE equipo SET estado = FALSE WHERE id_equipo = ?";
+    private static final String SQL_DELETE_BY_SALA
+            = "UPDATE equipo SET estado = FALSE WHERE id_sala = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM equipo WHERE id_equipo = ? AND estado = TRUE";
 
     /** Devuelve todos los equipos activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Equipo> findAll(Connection cn) throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_equipo");
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_equipo"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 equipos.add(mapear(rs));
             }

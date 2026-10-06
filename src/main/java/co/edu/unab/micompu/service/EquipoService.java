@@ -3,12 +3,16 @@ package co.edu.unab.micompu.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
+
 import co.edu.unab.micompu.entity.Equipo;
 import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
+
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
 import co.edu.unab.micompu.repository.RolRepository;
@@ -25,8 +29,8 @@ public class EquipoService {
     private final RolRepository rolRepository;
 
     public EquipoService(ConexionBD conexion, EquipoRepository equipoRepository,
-                        SalaRepository salaRepository, UsuarioRepository usuarioRepository,
-                        RolRepository rolRepository) {
+            SalaRepository salaRepository, UsuarioRepository usuarioRepository,
+            RolRepository rolRepository) {
         this.conexion = conexion;
         this.equipoRepository = equipoRepository;
         this.salaRepository = salaRepository;
@@ -76,14 +80,22 @@ public class EquipoService {
                 cn.commit();
                 return creado;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     // FK fk_equipo_sala: la sala indicada no existe.
                     throw new IllegalStateException("La sala indicada no existe.", e);
                 }
                 throw new RuntimeException("Error creando el equipo: " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -110,13 +122,21 @@ public class EquipoService {
                 cn.commit();
                 return equipo;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new IllegalStateException("La sala indicada no existe.", e);
                 }
                 throw new RuntimeException("Error actualizando el equipo " + idEquipo + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -146,13 +166,13 @@ public class EquipoService {
     private void completarSala(Connection cn, Equipo equipo) throws SQLException {
         Sala sala = salaRepository.findById(cn, equipo.getSala().getIdSala())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Sala no encontrada: " + equipo.getSala().getIdSala()));
+                "Sala no encontrada: " + equipo.getSala().getIdSala()));
         Usuario responsable = usuarioRepository.findById(cn, sala.getResponsable().getIdUsuario())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
+                "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
         responsable.setRol(rolRepository.findById(cn, responsable.getRol().getIdRol())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Rol no encontrado: " + responsable.getRol().getIdRol())));
+                "Rol no encontrado: " + responsable.getRol().getIdRol())));
         sala.setResponsable(responsable);
         equipo.setSala(sala);
     }

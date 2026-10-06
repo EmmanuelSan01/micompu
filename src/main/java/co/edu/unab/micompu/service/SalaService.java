@@ -3,13 +3,17 @@ package co.edu.unab.micompu.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
+
 import co.edu.unab.micompu.entity.Equipo;
 import co.edu.unab.micompu.entity.FranjaClase;
 import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
+
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
 import co.edu.unab.micompu.repository.FranjaClaseRepository;
@@ -28,8 +32,8 @@ public class SalaService {
     private final FranjaClaseRepository franjaClaseRepository;
 
     public SalaService(ConexionBD conexion, SalaRepository salaRepository,
-                      UsuarioRepository usuarioRepository, RolRepository rolRepository,
-                      EquipoRepository equipoRepository, FranjaClaseRepository franjaClaseRepository) {
+            UsuarioRepository usuarioRepository, RolRepository rolRepository,
+            EquipoRepository equipoRepository, FranjaClaseRepository franjaClaseRepository) {
         this.conexion = conexion;
         this.salaRepository = salaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -116,7 +120,11 @@ public class SalaService {
                 cn.commit();
                 return creada;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     // UNIQUE (nombre) o FK (responsable inexistente).
                     throw new IllegalStateException(
@@ -124,7 +132,11 @@ public class SalaService {
                 }
                 throw new RuntimeException("Error creando la sala: " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -151,14 +163,22 @@ public class SalaService {
                 cn.commit();
                 return sala;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new IllegalStateException(
                             "Ya existe otra sala con el nombre " + sala.getNombre() + ".", e);
                 }
                 throw new RuntimeException("Error actualizando la sala " + idSala + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -169,12 +189,11 @@ public class SalaService {
     /**
      * Elimina la sala (el "todo") arrastrando el ciclo de vida de sus partes
      * (composición): desactiva sus franjas, sus equipos y la propia sala
-     * (borrado lógico: {@code estado = FALSE}) dentro de una transacción
-     * manual (commit si todo sale bien; rollback y estado consistente si
-     * algo falla). Las reservas de los equipos no se tocan: como el borrado
-     * es lógico, las filas de los equipos siguen existiendo y la FK
-     * {@code fk_reserva_equipo} se conserva — las reservas quedan como
-     * histórico de equipos inactivos.
+     * (borrado lógico: {@code estado = FALSE}) dentro de una transacción manual
+     * (commit si todo sale bien; rollback y estado consistente si algo falla).
+     * Las reservas de los equipos no se tocan: como el borrado es lógico, las
+     * filas de los equipos siguen existiendo y la FK {@code fk_reserva_equipo}
+     * se conserva — las reservas quedan como histórico de equipos inactivos.
      */
     public void eliminar(Integer idSala) {
         validarId(idSala);
@@ -188,10 +207,18 @@ public class SalaService {
                 }
                 cn.commit();
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw new RuntimeException("Error eliminando la sala " + idSala + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -209,7 +236,7 @@ public class SalaService {
                 .orElseThrow(() -> new NoSuchElementException("Usuario responsable no encontrado: " + idResponsable));
         responsable.setRol(rolRepository.findById(cn, responsable.getRol().getIdRol())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Rol no encontrado: " + responsable.getRol().getIdRol())));
+                "Rol no encontrado: " + responsable.getRol().getIdRol())));
         sala.setResponsable(responsable);
     }
 

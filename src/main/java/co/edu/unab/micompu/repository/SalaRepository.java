@@ -1,38 +1,36 @@
 package co.edu.unab.micompu.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
 
 @Repository
 public class SalaRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_sala, id_responsable, nombre, capacidad, estado FROM sala";
-    private static final String SQL_INSERT =
-            "INSERT INTO sala (id_responsable, nombre, capacidad, estado) VALUES (?, ?, ?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE sala SET id_responsable = ?, nombre = ?, capacidad = ?, estado = ?"
-                    + " WHERE id_sala = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_sala, id_responsable, nombre, capacidad, estado FROM sala";
+    private static final String SQL_INSERT
+            = "INSERT INTO sala (id_responsable, nombre, capacidad, estado) VALUES (?, ?, ?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE sala SET id_responsable = ?, nombre = ?, capacidad = ?, estado = ?"
+            + " WHERE id_sala = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
-    private static final String SQL_DELETE =
-            "UPDATE sala SET estado = FALSE WHERE id_sala = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM sala WHERE id_sala = ? AND estado = TRUE";
+    private static final String SQL_DELETE
+            = "UPDATE sala SET estado = FALSE WHERE id_sala = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM sala WHERE id_sala = ? AND estado = TRUE";
 
     /** Devuelve todas las salas activas (las inactivas quedan ocultas por el borrado lógico). */
     public List<Sala> findAll(Connection cn) throws SQLException {
         List<Sala> salas = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_sala");
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_sala"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 salas.add(mapear(rs));
             }

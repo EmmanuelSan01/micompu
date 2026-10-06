@@ -1,17 +1,16 @@
 package co.edu.unab.micompu.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Time;
+import java.sql.*;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.Equipo;
 import co.edu.unab.micompu.entity.Reserva;
 import co.edu.unab.micompu.entity.Usuario;
@@ -19,31 +18,30 @@ import co.edu.unab.micompu.entity.Usuario;
 @Repository
 public class ReservaRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_reserva, id_usuario, id_equipo, fecha, hora_inicio, hora_fin FROM reserva";
-    private static final String SQL_INSERT =
-            "INSERT INTO reserva (id_usuario, id_equipo, fecha, hora_inicio, hora_fin)"
-                    + " VALUES (?, ?, ?, ?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE reserva SET id_usuario = ?, id_equipo = ?, fecha = ?, hora_inicio = ?,"
-                    + " hora_fin = ? WHERE id_reserva = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_reserva, id_usuario, id_equipo, fecha, hora_inicio, hora_fin FROM reserva";
+    private static final String SQL_INSERT
+            = "INSERT INTO reserva (id_usuario, id_equipo, fecha, hora_inicio, hora_fin)"
+            + " VALUES (?, ?, ?, ?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE reserva SET id_usuario = ?, id_equipo = ?, fecha = ?, hora_inicio = ?,"
+            + " hora_fin = ? WHERE id_reserva = ?";
     /**
      * Borrado físico de reservas: la tabla {@code reserva} no tiene columna
      * {@code estado} en el DDL, por lo que su eliminación no puede ser lógica.
      */
-    private static final String SQL_DELETE =
-            "DELETE FROM reserva WHERE id_reserva = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM reserva WHERE id_reserva = ?";
-    private static final String SQL_SOLAPADA =
-            "SELECT 1 FROM reserva WHERE id_equipo = ? AND fecha = ?"
-                    + " AND hora_inicio < ? AND hora_fin > ?";
+    private static final String SQL_DELETE
+            = "DELETE FROM reserva WHERE id_reserva = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM reserva WHERE id_reserva = ?";
+    private static final String SQL_SOLAPADA
+            = "SELECT 1 FROM reserva WHERE id_equipo = ? AND fecha = ?"
+            + " AND hora_inicio < ? AND hora_fin > ?";
 
     /** Devuelve todas las reservas. */
     public List<Reserva> findAll(Connection cn) throws SQLException {
         List<Reserva> reservas = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY fecha, hora_inicio");
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " ORDER BY fecha, hora_inicio"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 reservas.add(mapear(rs));
             }

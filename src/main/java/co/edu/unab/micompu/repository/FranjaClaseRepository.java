@@ -1,48 +1,46 @@
 package co.edu.unab.micompu.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Time;
+import java.sql.*;
+
 import java.time.LocalTime;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.FranjaClase;
 import co.edu.unab.micompu.entity.Sala;
 
 @Repository
 public class FranjaClaseRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_franja_clase, id_sala, dia_semana, hora_inicio, hora_fin, motivo, estado"
-                    + " FROM franja_clase";
-    private static final String SQL_INSERT =
-            "INSERT INTO franja_clase (id_sala, dia_semana, hora_inicio, hora_fin, motivo, estado)"
-                    + " VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE franja_clase SET id_sala = ?, dia_semana = ?, hora_inicio = ?, hora_fin = ?,"
-                    + " motivo = ?, estado = ? WHERE id_franja_clase = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_franja_clase, id_sala, dia_semana, hora_inicio, hora_fin, motivo, estado"
+            + " FROM franja_clase";
+    private static final String SQL_INSERT
+            = "INSERT INTO franja_clase (id_sala, dia_semana, hora_inicio, hora_fin, motivo, estado)"
+            + " VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE franja_clase SET id_sala = ?, dia_semana = ?, hora_inicio = ?, hora_fin = ?,"
+            + " motivo = ?, estado = ? WHERE id_franja_clase = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
-    private static final String SQL_DELETE =
-            "UPDATE franja_clase SET estado = FALSE WHERE id_franja_clase = ?";
-    private static final String SQL_DELETE_BY_SALA =
-            "UPDATE franja_clase SET estado = FALSE WHERE id_sala = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM franja_clase WHERE id_franja_clase = ? AND estado = TRUE";
-    private static final String SQL_SOLAPADA =
-            "SELECT 1 FROM franja_clase WHERE id_sala = ? AND dia_semana = ? AND estado = TRUE"
-                    + " AND hora_inicio < ? AND hora_fin > ?";
+    private static final String SQL_DELETE
+            = "UPDATE franja_clase SET estado = FALSE WHERE id_franja_clase = ?";
+    private static final String SQL_DELETE_BY_SALA
+            = "UPDATE franja_clase SET estado = FALSE WHERE id_sala = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM franja_clase WHERE id_franja_clase = ? AND estado = TRUE";
+    private static final String SQL_SOLAPADA
+            = "SELECT 1 FROM franja_clase WHERE id_sala = ? AND dia_semana = ? AND estado = TRUE"
+            + " AND hora_inicio < ? AND hora_fin > ?";
 
     /** Devuelve todas las franjas de clase activas (las inactivas quedan ocultas por el borrado lógico). */
     public List<FranjaClase> findAll(Connection cn) throws SQLException {
         List<FranjaClase> franjas = new ArrayList<>();
         try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE"
-                + " ORDER BY id_sala, dia_semana, hora_inicio");
-             ResultSet rs = ps.executeQuery()) {
+                + " ORDER BY id_sala, dia_semana, hora_inicio"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 franjas.add(mapear(rs));
             }

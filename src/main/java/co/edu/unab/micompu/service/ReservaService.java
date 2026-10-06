@@ -3,13 +3,17 @@ package co.edu.unab.micompu.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
+
 import co.edu.unab.micompu.entity.Equipo;
 import co.edu.unab.micompu.entity.Reserva;
 import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
+
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
 import co.edu.unab.micompu.repository.FranjaClaseRepository;
@@ -30,9 +34,9 @@ public class ReservaService {
     private final FranjaClaseRepository franjaClaseRepository;
 
     public ReservaService(ConexionBD conexion, ReservaRepository reservaRepository,
-                          UsuarioRepository usuarioRepository, RolRepository rolRepository,
-                          EquipoRepository equipoRepository, SalaRepository salaRepository,
-                          FranjaClaseRepository franjaClaseRepository) {
+            UsuarioRepository usuarioRepository, RolRepository rolRepository,
+            EquipoRepository equipoRepository, SalaRepository salaRepository,
+            FranjaClaseRepository franjaClaseRepository) {
         this.conexion = conexion;
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -68,10 +72,7 @@ public class ReservaService {
         }
     }
 
-    /**
-     * Crea una reserva validando todas las reglas de negocio dentro de una
-     * transacción manual (commit si todo sale bien; rollback si algo falla).
-     */
+    /** Crea una reserva validando todas las reglas de negocio dentro de una transacción manual. */
     public Reserva crear(Reserva reserva) {
         validar(reserva);
         try (Connection cn = conexion.obtener()) {
@@ -108,14 +109,22 @@ public class ReservaService {
                 cn.commit();
                 return creada;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     // FK fk_reserva_usuario / fk_reserva_equipo.
                     throw new IllegalStateException("La reserva referencia un usuario o equipo inexistente.", e);
                 }
                 throw new RuntimeException("Error creando la reserva: " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -163,13 +172,21 @@ public class ReservaService {
                 cn.commit();
                 return reserva;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new IllegalStateException("La reserva referencia un usuario o equipo inexistente.", e);
                 }
                 throw new RuntimeException("Error actualizando la reserva " + idReserva + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -178,9 +195,9 @@ public class ReservaService {
     }
 
     /**
-     * Elimina una reserva (404 si no existe). Su borrado es físico —no
-     * lógico— porque la tabla {@code reserva} no tiene columna {@code estado}
-     * en el DDL. El equipo reservado permanece (agregación).
+     * Elimina una reserva (404 si no existe). Su borrado es físico —no lógico—
+     * porque la tabla {@code reserva} no tiene columna {@code estado} en el DDL.
+     * El equipo reservado permanece (agregación).
      */
     public void eliminar(Integer idReserva) {
         validarId(idReserva);
@@ -200,15 +217,15 @@ public class ReservaService {
     private void completarRelaciones(Connection cn, Reserva reserva) throws SQLException {
         Usuario usuario = usuarioRepository.findById(cn, reserva.getUsuario().getIdUsuario())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Usuario de la reserva no encontrado: " + reserva.getUsuario().getIdUsuario()));
+                "Usuario de la reserva no encontrado: " + reserva.getUsuario().getIdUsuario()));
         usuario.setRol(rolRepository.findById(cn, usuario.getRol().getIdRol())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Rol no encontrado: " + usuario.getRol().getIdRol())));
+                "Rol no encontrado: " + usuario.getRol().getIdRol())));
         reserva.setUsuario(usuario);
 
         Equipo equipo = equipoRepository.findById(cn, reserva.getEquipo().getIdEquipo())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Equipo de la reserva no encontrado: " + reserva.getEquipo().getIdEquipo()));
+                "Equipo de la reserva no encontrado: " + reserva.getEquipo().getIdEquipo()));
         completarSalaDelEquipo(cn, equipo);
         reserva.setEquipo(equipo);
     }
@@ -217,13 +234,13 @@ public class ReservaService {
     private void completarSalaDelEquipo(Connection cn, Equipo equipo) throws SQLException {
         Sala sala = salaRepository.findById(cn, equipo.getSala().getIdSala())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Sala no encontrada: " + equipo.getSala().getIdSala()));
+                "Sala no encontrada: " + equipo.getSala().getIdSala()));
         Usuario responsable = usuarioRepository.findById(cn, sala.getResponsable().getIdUsuario())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
+                "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
         responsable.setRol(rolRepository.findById(cn, responsable.getRol().getIdRol())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Rol no encontrado: " + responsable.getRol().getIdRol())));
+                "Rol no encontrado: " + responsable.getRol().getIdRol())));
         sala.setResponsable(responsable);
         equipo.setSala(sala);
     }

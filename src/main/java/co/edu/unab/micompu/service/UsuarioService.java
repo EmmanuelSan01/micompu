@@ -3,9 +3,12 @@ package co.edu.unab.micompu.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
+
 import co.edu.unab.micompu.entity.Usuario;
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.RolRepository;
@@ -19,7 +22,7 @@ public class UsuarioService {
     private final RolRepository rolRepository;
 
     public UsuarioService(ConexionBD conexion, UsuarioRepository usuarioRepository,
-                         RolRepository rolRepository) {
+            RolRepository rolRepository) {
         this.conexion = conexion;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
@@ -67,7 +70,11 @@ public class UsuarioService {
                 cn.commit();
                 return creado;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     // UNIQUE (email) o FK (rol inexistente).
                     throw new IllegalStateException(
@@ -75,7 +82,11 @@ public class UsuarioService {
                 }
                 throw new RuntimeException("Error creando el usuario: " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -102,14 +113,22 @@ public class UsuarioService {
                 cn.commit();
                 return usuario;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new IllegalStateException(
                             "Ya existe otro usuario registrado con el correo " + usuario.getEmail() + ".", e);
                 }
                 throw new RuntimeException("Error actualizando el usuario " + idUsuario + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {

@@ -1,36 +1,34 @@
 package co.edu.unab.micompu.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.Rol;
 
 @Repository
 public class RolRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_rol, nombre, estado FROM rol";
-    private static final String SQL_INSERT =
-            "INSERT INTO rol (nombre, estado) VALUES (?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE rol SET nombre = ?, estado = ? WHERE id_rol = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_rol, nombre, estado FROM rol";
+    private static final String SQL_INSERT
+            = "INSERT INTO rol (nombre, estado) VALUES (?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE rol SET nombre = ?, estado = ? WHERE id_rol = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
-    private static final String SQL_DELETE =
-            "UPDATE rol SET estado = FALSE WHERE id_rol = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM rol WHERE id_rol = ? AND estado = TRUE";
+    private static final String SQL_DELETE
+            = "UPDATE rol SET estado = FALSE WHERE id_rol = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM rol WHERE id_rol = ? AND estado = TRUE";
 
     /** Devuelve todos los roles activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Rol> findAll(Connection cn) throws SQLException {
         List<Rol> roles = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_rol");
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_rol"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 roles.add(mapear(rs));
             }

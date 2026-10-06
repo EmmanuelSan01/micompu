@@ -1,38 +1,36 @@
 package co.edu.unab.micompu.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
+
 import co.edu.unab.micompu.entity.Rol;
 import co.edu.unab.micompu.entity.Usuario;
 
 @Repository
 public class UsuarioRepository {
 
-    private static final String SQL_SELECT =
-            "SELECT id_usuario, id_rol, email, nombre, password_hash, estado FROM usuario";
-    private static final String SQL_INSERT =
-            "INSERT INTO usuario (id_rol, email, nombre, password_hash, estado) VALUES (?, ?, ?, ?, ?)";
-    private static final String SQL_UPDATE =
-            "UPDATE usuario SET id_rol = ?, email = ?, nombre = ?, password_hash = ?, estado = ?"
-                    + " WHERE id_usuario = ?";
+    private static final String SQL_SELECT
+            = "SELECT id_usuario, id_rol, email, nombre, password_hash, estado FROM usuario";
+    private static final String SQL_INSERT
+            = "INSERT INTO usuario (id_rol, email, nombre, password_hash, estado) VALUES (?, ?, ?, ?, ?)";
+    private static final String SQL_UPDATE
+            = "UPDATE usuario SET id_rol = ?, email = ?, nombre = ?, password_hash = ?, estado = ?"
+            + " WHERE id_usuario = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
-    private static final String SQL_DELETE =
-            "UPDATE usuario SET estado = FALSE WHERE id_usuario = ?";
-    private static final String SQL_EXISTS =
-            "SELECT 1 FROM usuario WHERE id_usuario = ? AND estado = TRUE";
+    private static final String SQL_DELETE
+            = "UPDATE usuario SET estado = FALSE WHERE id_usuario = ?";
+    private static final String SQL_EXISTS
+            = "SELECT 1 FROM usuario WHERE id_usuario = ? AND estado = TRUE";
 
     /** Devuelve todos los usuarios activos (los inactivos quedan ocultos por el borrado lógico). */
     public List<Usuario> findAll(Connection cn) throws SQLException {
         List<Usuario> usuarios = new ArrayList<>();
-        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_usuario");
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE estado = TRUE ORDER BY id_usuario"); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 usuarios.add(mapear(rs));
             }

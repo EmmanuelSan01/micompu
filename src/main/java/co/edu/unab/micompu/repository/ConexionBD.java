@@ -3,6 +3,7 @@ package co.edu.unab.micompu.repository;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,8 +15,8 @@ public class ConexionBD {
     private final String clave;
 
     public ConexionBD(@Value("${db.url}") String url,
-                     @Value("${db.usuario}") String usuario,
-                     @Value("${db.clave}") String clave) {
+            @Value("${db.usuario}") String usuario,
+            @Value("${db.clave}") String clave) {
         this.url = url;
         this.usuario = usuario;
         this.clave = clave;

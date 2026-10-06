@@ -3,12 +3,16 @@ package co.edu.unab.micompu.service;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
+
 import co.edu.unab.micompu.entity.FranjaClase;
 import co.edu.unab.micompu.entity.Sala;
 import co.edu.unab.micompu.entity.Usuario;
+
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.FranjaClaseRepository;
 import co.edu.unab.micompu.repository.RolRepository;
@@ -25,8 +29,8 @@ public class FranjaClaseService {
     private final RolRepository rolRepository;
 
     public FranjaClaseService(ConexionBD conexion, FranjaClaseRepository franjaClaseRepository,
-                             SalaRepository salaRepository, UsuarioRepository usuarioRepository,
-                             RolRepository rolRepository) {
+            SalaRepository salaRepository, UsuarioRepository usuarioRepository,
+            RolRepository rolRepository) {
         this.conexion = conexion;
         this.franjaClaseRepository = franjaClaseRepository;
         this.salaRepository = salaRepository;
@@ -82,14 +86,22 @@ public class FranjaClaseService {
                 cn.commit();
                 return creada;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     // FK fk_franja_clase_sala.
                     throw new IllegalStateException("La sala indicada no existe.", e);
                 }
                 throw new RuntimeException("Error creando la franja de clase: " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -121,14 +133,22 @@ public class FranjaClaseService {
                 cn.commit();
                 return franja;
             } catch (SQLException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new IllegalStateException("La sala indicada no existe.", e);
                 }
                 throw new RuntimeException(
                         "Error actualizando la franja de clase " + idFranjaClase + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {
-                try { cn.rollback(); } catch (SQLException sup) { e.addSuppressed(sup); }
+                try {
+                    cn.rollback();
+                } catch (SQLException sup) {
+                    e.addSuppressed(sup);
+                }
                 throw e;
             }
         } catch (SQLException e) {
@@ -153,13 +173,13 @@ public class FranjaClaseService {
     private void completarSala(Connection cn, FranjaClase franja) throws SQLException {
         Sala sala = salaRepository.findById(cn, franja.getSala().getIdSala())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Sala no encontrada: " + franja.getSala().getIdSala()));
+                "Sala no encontrada: " + franja.getSala().getIdSala()));
         Usuario responsable = usuarioRepository.findById(cn, sala.getResponsable().getIdUsuario())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
+                "Usuario responsable no encontrado: " + sala.getResponsable().getIdUsuario()));
         responsable.setRol(rolRepository.findById(cn, responsable.getRol().getIdRol())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Rol no encontrado: " + responsable.getRol().getIdRol())));
+                "Rol no encontrado: " + responsable.getRol().getIdRol())));
         sala.setResponsable(responsable);
         franja.setSala(sala);
     }

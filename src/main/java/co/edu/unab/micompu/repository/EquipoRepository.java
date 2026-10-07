@@ -26,7 +26,7 @@ public class EquipoRepository {
             = "UPDATE equipo SET id_sala = ?, estado = ? WHERE id_equipo = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE
-            = "UPDATE equipo SET estado = FALSE WHERE id_equipo = ?";
+            = "UPDATE equipo SET estado = FALSE WHERE id_equipo = ? AND estado = TRUE";
     private static final String SQL_DELETE_BY_SALA
             = "UPDATE equipo SET estado = FALSE WHERE id_sala = ?";
     private static final String SQL_EXISTS

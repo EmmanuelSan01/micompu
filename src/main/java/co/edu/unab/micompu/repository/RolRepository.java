@@ -21,7 +21,7 @@ public class RolRepository {
             = "UPDATE rol SET nombre = ?, estado = ? WHERE id_rol = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE
-            = "UPDATE rol SET estado = FALSE WHERE id_rol = ?";
+            = "UPDATE rol SET estado = FALSE WHERE id_rol = ? AND estado = TRUE";
     private static final String SQL_EXISTS
             = "SELECT 1 FROM rol WHERE id_rol = ? AND estado = TRUE";
 

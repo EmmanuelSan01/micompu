@@ -53,6 +53,19 @@ public class EquipoRepository {
         }
     }
 
+    /**
+     * Busca un equipo por su clave primaria {@code id_equipo} bloqueando la fila
+     * ({@code SELECT ... FOR UPDATE}) hasta el commit/rollback de la transacción.
+     */
+    public Optional<Equipo> findByIdForUpdate(Connection cn, int idEquipo) throws SQLException {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE id_equipo = ? FOR UPDATE")) {
+            ps.setInt(1, idEquipo);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapear(rs)) : Optional.empty();
+            }
+        }
+    }
+
     /** Devuelve los equipos (partes) activos de una sala (todo). */
     public List<Equipo> findBySala(Connection cn, int idSala) throws SQLException {
         List<Equipo> equipos = new ArrayList<>();

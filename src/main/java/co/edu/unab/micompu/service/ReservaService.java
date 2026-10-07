@@ -81,16 +81,18 @@ public class ReservaService {
                 int idUsuario = reserva.getUsuario().getIdUsuario();
                 int idEquipo = reserva.getEquipo().getIdEquipo();
 
+                // Bloqueo pesimista de la fila del equipo (SELECT ... FOR UPDATE):
+                // dos reservas concurrentes del mismo equipo se serializan.
+                Equipo equipo = equipoRepository.findByIdForUpdate(cn, idEquipo)
+                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
+                if (!equipo.isEstado()) {
+                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
+                }
                 Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
                 if (!usuario.isEstado()) {
                     // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
                     throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
-                }
-                Equipo equipo = equipoRepository.findById(cn, idEquipo)
-                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
-                if (!equipo.isEstado()) {
-                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
                 }
                 if (reservaRepository.existsSolapada(cn, idEquipo, reserva.getFecha(),
                         reserva.getHoraInicio(), reserva.getHoraFin(), null)) {
@@ -143,16 +145,18 @@ public class ReservaService {
                 int idUsuario = reserva.getUsuario().getIdUsuario();
                 int idEquipo = reserva.getEquipo().getIdEquipo();
 
+                // Bloqueo pesimista de la fila del equipo (SELECT ... FOR UPDATE)
+                // dos reservas concurrentes del mismo equipo se serializan.
+                Equipo equipo = equipoRepository.findByIdForUpdate(cn, idEquipo)
+                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
+                if (!equipo.isEstado()) {
+                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
+                }
                 Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
                 if (!usuario.isEstado()) {
                     // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
                     throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
-                }
-                Equipo equipo = equipoRepository.findById(cn, idEquipo)
-                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
-                if (!equipo.isEstado()) {
-                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
                 }
                 if (reservaRepository.existsSolapada(cn, idEquipo, reserva.getFecha(),
                         reserva.getHoraInicio(), reserva.getHoraFin(), idReserva)) {

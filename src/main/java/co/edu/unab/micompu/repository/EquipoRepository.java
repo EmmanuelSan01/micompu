@@ -23,7 +23,7 @@ public class EquipoRepository {
     private static final String SQL_INSERT
             = "INSERT INTO equipo (id_sala, estado) VALUES (?, ?)";
     private static final String SQL_UPDATE
-            = "UPDATE equipo SET id_sala = ?, estado = ? WHERE id_equipo = ?";
+            = "UPDATE equipo SET id_sala = ? WHERE id_equipo = ?";
     /** Borrado lógico (soft delete): la fila no se borra, se marca inactiva. */
     private static final String SQL_DELETE
             = "UPDATE equipo SET estado = FALSE WHERE id_equipo = ? AND estado = TRUE";
@@ -96,12 +96,11 @@ public class EquipoRepository {
         return equipo;
     }
 
-    /** Actualiza un equipo por su {@code id_equipo}; indica si la fila existía. */
+    /** Actualiza la sala de un equipo por su {@code id_equipo}; indica si la fila existía. */
     public boolean update(Connection cn, Equipo equipo) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_UPDATE)) {
             ps.setInt(1, equipo.getSala().getIdSala());
-            ps.setBoolean(2, equipo.isEstado());
-            ps.setInt(3, equipo.getIdEquipo());
+            ps.setInt(2, equipo.getIdEquipo());
             return ps.executeUpdate() > 0;
         }
     }

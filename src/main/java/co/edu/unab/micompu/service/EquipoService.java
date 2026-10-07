@@ -115,9 +115,16 @@ public class EquipoService {
                     throw new NoSuchElementException(
                             "Sala no encontrada o inactiva: " + equipo.getSala().getIdSala());
                 }
+                Equipo actual = equipoRepository.findByIdForUpdate(cn, idEquipo)
+                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
+                if (!actual.isEstado()) {
+                    throw new IllegalStateException(
+                            "El equipo " + idEquipo + " está inactivo (borrado lógico) y no puede actualizarse.");
+                }
                 if (!equipoRepository.update(cn, equipo)) {
                     throw new NoSuchElementException("Equipo no encontrado: " + idEquipo);
                 }
+                equipo.setEstado(actual.isEstado());
                 completarSala(cn, equipo);
                 cn.commit();
                 return equipo;

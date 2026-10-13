@@ -16,6 +16,7 @@ import co.edu.unab.micompu.repository.UsuarioRepository;
 
 @Service
 public class UsuarioService {
+    private static final int ER_DUP_ENTRY = 1062;
 
     private final ConexionBD conexion;
     private final UsuarioRepository usuarioRepository;
@@ -79,9 +80,14 @@ public class UsuarioService {
                     e.addSuppressed(sup);
                 }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
-                    // UNIQUE (email) o FK (rol inexistente).
+                    // Solo el 1062 (ER_DUP_ENTRY) es una clave duplicada
+                    // NOT NULL u otras violaciones de integridad NO se reportan como correo duplicado.
+                    if (e.getErrorCode() == ER_DUP_ENTRY) {
+                        throw new IllegalStateException(
+                                "Ya existe un usuario registrado con el correo " + usuario.getEmail() + ".", e);
+                    }
                     throw new IllegalStateException(
-                            "Ya existe un usuario registrado con el correo " + usuario.getEmail() + ".", e);
+                            "La operación viola una restricción de integridad: " + e.getMessage(), e);
                 }
                 throw new RuntimeException("Error creando el usuario: " + e.getMessage(), e);
             } catch (RuntimeException e) {
@@ -97,7 +103,7 @@ public class UsuarioService {
         }
     }
 
-    /** Actualiza un usuario (404 si no existe; transacción manual). */
+    /** Actualiza un usuario (transacción manual). */
     public Usuario actualizar(Integer idUsuario, Usuario usuario) {
         validarId(idUsuario);
         validar(usuario);
@@ -122,8 +128,14 @@ public class UsuarioService {
                     e.addSuppressed(sup);
                 }
                 if (e instanceof SQLIntegrityConstraintViolationException) {
+                    // Solo el 1062 (ER_DUP_ENTRY) es una clave duplicada
+                    // NOT NULL u otras violaciones de integridad NO se reportan como correo duplicado.
+                    if (e.getErrorCode() == ER_DUP_ENTRY) {
+                        throw new IllegalStateException(
+                                "Ya existe otro usuario registrado con el correo " + usuario.getEmail() + ".", e);
+                    }
                     throw new IllegalStateException(
-                            "Ya existe otro usuario registrado con el correo " + usuario.getEmail() + ".", e);
+                            "La operación viola una restricción de integridad: " + e.getMessage(), e);
                 }
                 throw new RuntimeException("Error actualizando el usuario " + idUsuario + ": " + e.getMessage(), e);
             } catch (RuntimeException e) {

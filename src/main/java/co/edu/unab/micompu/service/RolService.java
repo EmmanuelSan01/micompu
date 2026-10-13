@@ -32,12 +32,16 @@ public class RolService {
         }
     }
 
-    /** Devuelve un rol por su id (404 si no existe). */
+    /** Devuelve un rol por su id (404 si no existe o está inactivo). */
     public Rol obtenerPorId(Integer idRol) {
         validarId(idRol);
         try (Connection cn = conexion.obtener()) {
-            return rolRepository.findById(cn, idRol)
+            Rol rol = rolRepository.findById(cn, idRol)
                     .orElseThrow(() -> new NoSuchElementException("Rol no encontrado: " + idRol));
+            if (!rol.isEstado()) {
+                throw new NoSuchElementException("Rol inactivo (borrado lógico): " + idRol);
+            }
+            return rol;
         } catch (SQLException e) {
             throw new RuntimeException("Error consultando el rol " + idRol + ": " + e.getMessage(), e);
         }

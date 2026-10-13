@@ -55,12 +55,15 @@ public class SalaService {
         }
     }
 
-    /** Devuelve una sala con su responsable resuelto (404 si no existe). */
+    /** Devuelve una sala con su responsable resuelto (404 si no existe o está inactiva). */
     public Sala obtenerPorId(Integer idSala) {
         validarId(idSala);
         try (Connection cn = conexion.obtener()) {
             Sala sala = salaRepository.findById(cn, idSala)
                     .orElseThrow(() -> new NoSuchElementException("Sala no encontrada: " + idSala));
+            if (!sala.isEstado()) {
+                throw new NoSuchElementException("Sala inactiva (borrado lógico): " + idSala);
+            }
             completarResponsable(cn, sala);
             return sala;
         } catch (SQLException e) {
@@ -68,12 +71,15 @@ public class SalaService {
         }
     }
 
-    /** Devuelve los equipos de la sala. */
+    /** Devuelve los equipos de la sala (404 si la sala no existe o está inactiva). */
     public List<Equipo> obtenerEquipos(Integer idSala) {
         validarId(idSala);
         try (Connection cn = conexion.obtener()) {
             Sala sala = salaRepository.findById(cn, idSala)
                     .orElseThrow(() -> new NoSuchElementException("Sala no encontrada: " + idSala));
+            if (!sala.isEstado()) {
+                throw new NoSuchElementException("Sala inactiva (borrado lógico): " + idSala);
+            }
             completarResponsable(cn, sala);
             List<Equipo> equipos = equipoRepository.findBySala(cn, idSala);
             for (Equipo equipo : equipos) {
@@ -86,12 +92,15 @@ public class SalaService {
         }
     }
 
-    /** Devuelve las franjas de clase de la sala. */
+    /** Devuelve las franjas de clase de la sala (404 si la sala no existe o está inactiva). */
     public List<FranjaClase> obtenerFranjas(Integer idSala) {
         validarId(idSala);
         try (Connection cn = conexion.obtener()) {
             Sala sala = salaRepository.findById(cn, idSala)
                     .orElseThrow(() -> new NoSuchElementException("Sala no encontrada: " + idSala));
+            if (!sala.isEstado()) {
+                throw new NoSuchElementException("Sala inactiva (borrado lógico): " + idSala);
+            }
             completarResponsable(cn, sala);
             List<FranjaClase> franjas = franjaClaseRepository.findBySala(cn, idSala);
             for (FranjaClase franja : franjas) {

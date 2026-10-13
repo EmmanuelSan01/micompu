@@ -41,12 +41,15 @@ public class UsuarioService {
         }
     }
 
-    /** Devuelve un usuario con su rol resuelto (404 si no existe). */
+    /** Devuelve un usuario con su rol resuelto (404 si no existe o está inactivo). */
     public Usuario obtenerPorId(Integer idUsuario) {
         validarId(idUsuario);
         try (Connection cn = conexion.obtener()) {
             Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                     .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
+            if (!usuario.isEstado()) {
+                throw new NoSuchElementException("Usuario inactivo (borrado lógico): " + idUsuario);
+            }
             completarRol(cn, usuario);
             return usuario;
         } catch (SQLException e) {

@@ -70,7 +70,7 @@ public class ValidadorReservas {
     /**
      * Validaciones 12 a 15 (contra la base de datos). Debe ejecutarse
      * dentro de la transacción de la reserva, después de que el
-     * service haya bloqueado y leído la fila del equipo.
+     * service haya bloqueado y leído las filas del equipo y del usuario.
      */
     public void validarContraBaseDeDatos(Connection cn, Reserva reserva, Equipo equipo,
             Integer idReservaExcluida) throws SQLException {

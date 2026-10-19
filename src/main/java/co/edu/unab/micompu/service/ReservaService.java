@@ -16,7 +16,6 @@ import co.edu.unab.micompu.entity.Usuario;
 
 import co.edu.unab.micompu.repository.ConexionBD;
 import co.edu.unab.micompu.repository.EquipoRepository;
-import co.edu.unab.micompu.repository.FranjaClaseRepository;
 import co.edu.unab.micompu.repository.ReservaRepository;
 import co.edu.unab.micompu.repository.RolRepository;
 import co.edu.unab.micompu.repository.SalaRepository;
@@ -31,19 +30,19 @@ public class ReservaService {
     private final RolRepository rolRepository;
     private final EquipoRepository equipoRepository;
     private final SalaRepository salaRepository;
-    private final FranjaClaseRepository franjaClaseRepository;
+    private final ValidadorReservas validadorReservas;
 
     public ReservaService(ConexionBD conexion, ReservaRepository reservaRepository,
             UsuarioRepository usuarioRepository, RolRepository rolRepository,
             EquipoRepository equipoRepository, SalaRepository salaRepository,
-            FranjaClaseRepository franjaClaseRepository) {
+            ValidadorReservas validadorReservas) {
         this.conexion = conexion;
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.equipoRepository = equipoRepository;
         this.salaRepository = salaRepository;
-        this.franjaClaseRepository = franjaClaseRepository;
+        this.validadorReservas = validadorReservas;
     }
 
     /** Devuelve todas las reservas con sus relaciones completas. */
@@ -72,9 +71,13 @@ public class ReservaService {
         }
     }
 
-    /** Crea una reserva validando todas las reglas de negocio dentro de una transacción manual. */
+    /**
+     * Crea una reserva validando todas las reglas de negocio dentro de una
+     * transacción manual.
+     */
     public Reserva crear(Reserva reserva) {
         validar(reserva);
+        validadorReservas.validarLocales(reserva);
         try (Connection cn = conexion.obtener()) {
             cn.setAutoCommit(false);
             try {
@@ -85,26 +88,17 @@ public class ReservaService {
                 // dos reservas concurrentes del mismo equipo se serializan.
                 Equipo equipo = equipoRepository.findByIdForUpdate(cn, idEquipo)
                         .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
-                if (!equipo.isEstado()) {
-                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
-                }
                 Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
                 if (!usuario.isEstado()) {
                     // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
                     throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
                 }
-                if (reservaRepository.existsSolapada(cn, idEquipo, reserva.getFecha(),
-                        reserva.getHoraInicio(), reserva.getHoraFin(), null)) {
-                    throw new IllegalStateException("El equipo ya tiene una reserva para ese día y horario.");
-                }
-                int diaSemana = reserva.getFecha().getDayOfWeek().getValue(); // 1 = lunes … 7 = domingo
-                int idSala = equipo.getSala().getIdSala();
-                if (franjaClaseRepository.existsSolapada(cn, idSala, diaSemana,
-                        reserva.getHoraInicio(), reserva.getHoraFin(), null)) {
-                    throw new IllegalStateException(
-                            "El horario solicitado se cruza con una franja de clase de la sala.");
-                }
+
+                // Validaciones 12 a 15: franja de clase de la sala,
+                // equipo activo, máximo de reservas activas del usuario y
+                // solapamiento con reservas existentes.
+                validadorReservas.validarContraBaseDeDatos(cn, reserva, equipo, null);
 
                 Reserva creada = reservaRepository.insert(cn, reserva);
                 completarRelaciones(cn, creada);
@@ -134,10 +128,13 @@ public class ReservaService {
         }
     }
 
-    /** Actualiza una reserva revalidando las reglas de negocio (transacción manual). */
+    /**
+     * Actualiza una reserva revalidando las reglas de negocio (transacción manual)
+     */
     public Reserva actualizar(Integer idReserva, Reserva reserva) {
         validarId(idReserva);
         validar(reserva);
+        validadorReservas.validarLocales(reserva);
         reserva.setIdReserva(idReserva);
         try (Connection cn = conexion.obtener()) {
             cn.setAutoCommit(false);
@@ -149,26 +146,15 @@ public class ReservaService {
                 // dos reservas concurrentes del mismo equipo se serializan.
                 Equipo equipo = equipoRepository.findByIdForUpdate(cn, idEquipo)
                         .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado: " + idEquipo));
-                if (!equipo.isEstado()) {
-                    throw new IllegalStateException("El equipo " + idEquipo + " está inactivo.");
-                }
                 Usuario usuario = usuarioRepository.findById(cn, idUsuario)
                         .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + idUsuario));
                 if (!usuario.isEstado()) {
                     // Regla de negocio ante el borrado lógico: un usuario inactivo no puede reservar.
                     throw new IllegalStateException("El usuario " + idUsuario + " está inactivo.");
                 }
-                if (reservaRepository.existsSolapada(cn, idEquipo, reserva.getFecha(),
-                        reserva.getHoraInicio(), reserva.getHoraFin(), idReserva)) {
-                    throw new IllegalStateException("El equipo ya tiene una reserva para ese día y horario.");
-                }
-                int diaSemana = reserva.getFecha().getDayOfWeek().getValue();
-                int idSala = equipo.getSala().getIdSala();
-                if (franjaClaseRepository.existsSolapada(cn, idSala, diaSemana,
-                        reserva.getHoraInicio(), reserva.getHoraFin(), null)) {
-                    throw new IllegalStateException(
-                            "El horario solicitado se cruza con una franja de clase de la sala.");
-                }
+
+                // Validaciones 12 a 15 sobre los nuevos datos, excluyendo la propia reserva.
+                validadorReservas.validarContraBaseDeDatos(cn, reserva, equipo, idReserva);
                 if (!reservaRepository.update(cn, reserva)) {
                     throw new NoSuchElementException("Reserva no encontrada: " + idReserva);
                 }

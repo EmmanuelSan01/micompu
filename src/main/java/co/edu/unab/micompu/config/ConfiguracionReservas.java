@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
+@ConfigurationProperties(prefix = "reservas")
 public class ConfiguracionReservas {
 
     /** Primer día del semestre admitido para reservar. */

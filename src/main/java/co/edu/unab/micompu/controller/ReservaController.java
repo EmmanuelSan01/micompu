@@ -32,9 +32,10 @@ public class ReservaController {
     }
 
     /**
-     * Crea una reserva (201, 400 si los datos son inválidos, 404 si el
-     * usuario o el equipo no existen, 409 si el equipo está inactivo u
-     * otro horario se cruza con la reserva o con una franja de clase).
+     * Crea una reserva (201, 400 si los datos son inválidos o no cumplen las
+     * reglas de reserva configuradas, 404 si el usuario o el equipo no existen,
+     * 409 si el equipo o el usuario están inactivos, el usuario alcanzó su máximo de
+     * reservas activas u otro horario se cruza con la reserva o con una franja de clase).
      */
     @PostMapping
     public ResponseEntity<Reserva> crear(@RequestBody Reserva reserva) {

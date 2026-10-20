@@ -37,6 +37,8 @@ public class ReservaRepository {
     private static final String SQL_SOLAPADA
             = "SELECT 1 FROM reserva WHERE id_equipo = ? AND fecha = ?"
             + " AND hora_inicio < ? AND hora_fin > ?";
+    private static final String SQL_COUNT_USUARIO_DESDE
+            = "SELECT COUNT(*) FROM reserva WHERE id_usuario = ? AND fecha >= ?";
 
     /** Devuelve todas las reservas. */
     public List<Reserva> findAll(Connection cn) throws SQLException {
@@ -132,6 +134,29 @@ public class ReservaRepository {
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Cuenta las reservas del usuario cuya fecha es igual o posterior a la dada:
+     * las «reservas activas» de la validación 14 de {@code ValidadorReservas} 
+     */
+    public int countByUsuarioDesdeFecha(Connection cn, int idUsuario, LocalDate fechaDesde,
+            Integer excluirIdReserva) throws SQLException {
+        String sql = SQL_COUNT_USUARIO_DESDE;
+        boolean excluir = excluirIdReserva != null;
+        if (excluir) {
+            sql = sql + " AND id_reserva <> ?";
+        }
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setInt(1, idUsuario);
+            ps.setDate(2, java.sql.Date.valueOf(fechaDesde));
+            if (excluir) {
+                ps.setInt(3, excluirIdReserva);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
             }
         }
     }

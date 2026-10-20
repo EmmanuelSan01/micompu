@@ -62,6 +62,19 @@ public class UsuarioRepository {
         }
     }
 
+    /**
+     * Busca un usuario por su correo (único en el DDL; incluye inactivos: el
+     * borrado es lógico y quien decide si puede iniciar sesión es el service).
+     */
+    public Optional<Usuario> findByEmail(Connection cn, String email) throws SQLException {
+        try (PreparedStatement ps = cn.prepareStatement(SQL_SELECT + " WHERE email = ?")) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapear(rs)) : Optional.empty();
+            }
+        }
+    }
+
     /** Inserta un usuario y devuelve la entidad con la llave generada. */
     public Usuario insert(Connection cn, Usuario usuario) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {

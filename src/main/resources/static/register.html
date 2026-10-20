@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/register.js" defer></script>
+  <title>MiCompu U — Registro</title>
+</head>
+<body class="auth pagina-register">
+  <div class="bubble bubble-1"></div>
+  <div class="bubble bubble-2"></div>
+  <div class="bubble bubble-3"></div>
+  <div class="bubble bubble-4"></div>
+
+  <div class="card">
+    <div class="hero">
+      <img class="hero-logo" src="https://unab.edu.co/impulsa/wp-content/uploads/2025/07/logo-u-vig.png" alt="Logo Universidad UNAB">
+      <div class="hero-divider"></div>
+      <span class="hero-appname">MiCompu<span>U</span></span>
+      <span class="hero-sub">Reserva de computadores</span>
+    </div>
+
+    <div class="form-area">
+      <p class="form-title">Crear cuenta</p>
+      <form id="registrationForm">
+        <div class="form-group">
+          <label for="name">Nombre completo</label>
+          <input type="text" name="name" id="name" placeholder="Ej. Ana García" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input type="email" name="email" id="email" placeholder="usuario@unab.edu.co" required>
+          <div id="emailError" class="error-message">
+            Correo ya registrado. Inicia sesión.
+          </div>
+          <div id="emailDomainError" class="error-message">
+            El correo debe terminar con @unab.edu.co
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" name="password" id="password" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group">
+          <label for="repeatPassword">Repetir contraseña</label>
+          <input type="password" name="repeatPassword" id="repeatPassword" placeholder="••••••••" required>
+          <div id="passwordError" class="error-message">
+            Las contraseñas no coinciden.
+          </div>
+        </div>
+
+        <button type="submit" class="button">Registrarse</button>
+      </form>
+
+      <div class="login-link">
+        ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

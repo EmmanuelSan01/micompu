@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiCompu U — Mis Reservas</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/mis-reservas.js" defer></script>
+</head>
+<body class="pagina-reservas">
+  <header>
+    <nav class="navbar">
+      <div class="navbar-brand">MiCompu UNAB</div>
+      <div class="navbar-user">
+        <a href="index.html" class="navbar-link">Reservar</a>
+        <span id="nombre-usuario"></span>
+        <div class="navbar-dropdown">
+          <button id="btn-cerrar-sesion" class="btn-cerrar-sesion">Cerrar sesión</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <div class="container">
+    <h1>Tus Reservas</h1>
+    <div id="bookings-container"></div>
+  </div>
+
+  <!-- Modal de confirmacion -->
+  <div id="modal-confirmacion" class="modal" hidden>
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2>Cancelar Reserva</h2>
+      <p>Esta acción no se puede deshacer. La reserva será eliminada permanentemente.</p>
+      <p id="modal-detalle-reserva"></p>
+      <div class="modal-actions">
+        <button id="btn-cancelar-modal" class="btn-secundario">Volver</button>
+        <button id="btn-confirmar-cancelar" class="btn-peligro">Confirmar cancelación</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

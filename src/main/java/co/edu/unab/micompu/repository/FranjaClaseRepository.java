@@ -16,6 +16,10 @@ import co.edu.unab.micompu.entity.Sala;
 @Repository
 public class FranjaClaseRepository {
 
+    /** Nombres del ENUM dia_semana del DDL, en su orden ISO-8601 (1 = lunes … 7 = domingo). */
+    private static final String[] DIAS_SEMANA =
+            {"lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"};
+
     private static final String SQL_SELECT
             = "SELECT id_franja_clase, id_sala, dia_semana, hora_inicio, hora_fin, motivo, estado"
             + " FROM franja_clase";
@@ -155,13 +159,32 @@ public class FranjaClaseRepository {
         }
     }
 
+    /**
+     * Lee el día de la semana de la fila. El DDL lo declara ENUM
+     * ('lunes' … 'domingo'): el byte ISO-8601 de la entidad
+     * (1 = lunes … 7 = domingo) coincide con el índice del ENUM
+     */
+    private byte leerDiaSemana(ResultSet rs) throws SQLException {
+        String valor = rs.getString("dia_semana");
+        try {
+            return Byte.parseByte(valor);
+        } catch (NumberFormatException e) {
+            for (byte dia = 1; dia <= DIAS_SEMANA.length; dia++) {
+                if (DIAS_SEMANA[dia - 1].equals(valor)) {
+                    return dia;
+                }
+            }
+            throw new SQLException("Día de la semana desconocido en franja_clase: " + valor);
+        }
+    }
+
     /** Mapeo manual de una fila del {@link ResultSet} al POJO {@link FranjaClase}. */
     private FranjaClase mapear(ResultSet rs) throws SQLException {
         return FranjaClase.builder()
                 .idFranjaClase(rs.getInt("id_franja_clase"))
                 // FK id_sala -> referencia mínima a la sala (la asocia el servicio).
                 .sala(Sala.builder().idSala(rs.getInt("id_sala")).build())
-                .diaSemana(rs.getByte("dia_semana"))
+                .diaSemana(leerDiaSemana(rs))
                 .horaInicio(rs.getTime("hora_inicio").toLocalTime())
                 .horaFin(rs.getTime("hora_fin").toLocalTime())
                 .motivo(rs.getString("motivo"))

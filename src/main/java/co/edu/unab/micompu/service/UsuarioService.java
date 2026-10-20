@@ -6,6 +6,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -168,6 +169,36 @@ public class UsuarioService {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error eliminando el usuario " + idUsuario + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Inicia la sesión de un usuario verificando sus credenciales contra la
+     * base de datos: 404 si el correo no está registrado (o el usuario está
+     * inactivo por borrado lógico) y 400 si la contraseña no coincide.
+     */
+    public Usuario autenticar(String email, String passwordHash) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("El correo de la sesión es obligatorio.");
+        }
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("La contraseña de la sesión es obligatoria.");
+        }
+        try (Connection cn = conexion.obtener()) {
+            Optional<Usuario> hallado = usuarioRepository.findByEmail(cn, email);
+            if (hallado.isEmpty() || !hallado.get().isEstado()) {
+                // Borrado lógico: para quien inicia sesión, un usuario inactivo ya no existe.
+                throw new NoSuchElementException(
+                        "No hay ningún usuario registrado con el correo " + email + ".");
+            }
+            Usuario usuario = hallado.get();
+            if (!usuario.getPasswordHash().equals(passwordHash)) {
+                throw new IllegalArgumentException("La contraseña es incorrecta.");
+            }
+            completarRol(cn, usuario);
+            return usuario;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error autenticando el usuario: " + e.getMessage(), e);
         }
     }
 

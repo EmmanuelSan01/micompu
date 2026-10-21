@@ -152,6 +152,35 @@ Tipos de relación (según el modelado documentado en las entidades):
 - **Agregación** (`o--`): `reserva→equipo`.
 - **Composición** (`*--`): `equipo→sala` y `franja_clase→sala`.
 
+## Reglas de negocio
+
+Cada solicitud de creación de reserva pasa por **15 validaciones** en orden:
+
+### Fase 1 — Validaciones locales
+
+| # | Regla | Método |
+|---|-------|--------|
+| 1 | Fecha no anterior al inicio del semestre | `validarFechaInicioSemestre` |
+| 2 | Fecha no está en el pasado | `validarFechaNoPasada` |
+| 3 | No excede la anticipación máxima (`maxDiasAnticipacion`) | `validarDiasAnticipacion` |
+| 4 | Fecha no posterior al cierre del semestre | `validarFechaCierreSemestre` |
+| 5 | Día de la semana no bloqueado (`diasBloqueados`, p. ej. sábado/domingo) | `validarDiaNoBloqueado` |
+| 6 | Fecha no está en `fechasBloqueadas` (festivos) | `validarFechaNoBloqueada` |
+| 7 | Hora de inicio ≥ `horaApertura` (08:00) | `validarHoraApertura` |
+| 8 | Hora de fin ≤ `horaCierre` (20:00) | `validarHoraCierre` |
+| 9 | Duración ≥ `minDuracionMinutos` (30 min) | `validarDuracionMinima` |
+| 10 | Duración ≤ `maxDuracionHoras` (4 h) | `validarDuracionMaxima` |
+| 11 | No se cruza con el bloque de almuerzo `[13:00, 14:00)` | `validarBloqueAlmuerzo` |
+
+### Fase 2 — Validaciones contra la base de datos
+
+| # | Regla | Método |
+|---|-------|--------|
+| 12 | No se cruza con franjas de clase activas de la sala | `validarFranjaDeClase` → `FranjaClaseRepository.existsSolapada` |
+| 13 | El equipo está activo (`equipo.isEstado()`) | `validarEquipoActivo` |
+| 14 | El usuario tiene menos de `maxReservasActivas` (2) reservas activas | `validarMaximoReservasActivas` → `ReservaRepository.countByUsuarioDesdeFecha` |
+| 15 | El equipo no tiene otra reserva solapada en ese horario | `validarReservaSolapada` → `ReservaRepository.existsSolapada` |
+
 ## API REST
 
 | Módulo | Endpoints |

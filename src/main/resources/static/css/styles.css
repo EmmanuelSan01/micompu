@@ -1,0 +1,1140 @@
+/* Tipografías */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@100..1000&display=swap"); /* DM Sans (pesos 100-1000) */
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap"); /* Syne (pesos 400-800) */
+
+:root {
+  --orange: #f97316;
+  --orange-dark: #ea580c;
+  --orange-deep: #c2410c;
+  --purple: #7e22ce;
+  --purple-mid: #6b21a8;
+  --purple-dark: #581c87;
+  --purple-deep: #3b0764;
+  --white: #ffffff;
+  --off-white: #fff7ed;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background: var(--orange);
+}
+
+/* Cuerpo por página */
+body.auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+body.pagina-register {
+  padding: 2rem 1rem;
+}
+
+body.pagina-index {
+  padding-top: 60px;
+}
+
+body.pagina-reservas {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-top: 76px;
+}
+
+/* Encabezados */
+h1 {
+  margin: 0 0 20px;
+  font-family: "Syne", sans-serif;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--white);
+}
+
+h2 {
+  font-family: "Syne", sans-serif;
+  font-size: 1.1rem;
+  margin: 0 0 16px;
+  color: var(--white);
+}
+
+/*
+==========================================
+  NAVBAR
+==========================================
+*/
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(59, 7, 100, 0.3);
+}
+
+.navbar-brand {
+  color: var(--white);
+  font-family: "Syne", sans-serif;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.navbar-user {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--white);
+}
+
+.navbar-user #nombre-usuario {
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.navbar-user #nombre-usuario:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-link {
+  color: var(--white);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.navbar-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--purple-dark);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(59, 7, 100, 0.4);
+  min-width: 150px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s;
+}
+
+.navbar-user #nombre-usuario:hover + .navbar-dropdown,
+.navbar-user:hover .navbar-dropdown,
+.navbar-dropdown:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.btn-cerrar-sesion {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--purple-dark);
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--white);
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+.btn-cerrar-sesion:hover {
+  background: var(--purple);
+}
+
+/*
+==========================================
+  AUTH: LOGIN Y REGISTRO (compartido)
+==========================================
+*/
+
+/* Fondo con degradados radiales */
+body.auth::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 10% 20%,
+      rgba(234, 88, 12, 0.6) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 60% at 90% 80%,
+      rgba(194, 65, 12, 0.5) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 40% at 50% 50%,
+      rgba(253, 186, 116, 0.3) 0%,
+      transparent 80%
+    );
+  pointer-events: none;
+}
+
+/* Burbujas decorativas */
+.bubble {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.bubble-1 {
+  width: 320px;
+  height: 320px;
+  top: -80px;
+  left: -80px;
+  animation: float1 8s ease-in-out infinite;
+}
+
+.bubble-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -40px;
+  right: -40px;
+  animation: float2 6s ease-in-out infinite;
+}
+
+.bubble-3 {
+  width: 120px;
+  height: 120px;
+  top: 40%;
+  left: 5%;
+  animation: float1 10s ease-in-out infinite reverse;
+}
+
+.bubble-4 {
+  width: 80px;
+  height: 80px;
+  bottom: 20%;
+  right: 8%;
+  animation: float2 7s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -20px) scale(1.05);
+  }
+}
+
+@keyframes float2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-15px, 15px) scale(1.08);
+  }
+}
+
+/* Tarjeta */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--purple-dark);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.08) inset,
+    0 24px 80px rgba(59, 7, 100, 0.5),
+    0 4px 24px rgba(0, 0, 0, 0.3);
+  animation: card-in 0.6s cubic-bezier(0.22, 0.68, 0, 1.2) both;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Encabezado de la tarjeta */
+.hero {
+  background: linear-gradient(
+    160deg,
+    var(--purple-deep) 0%,
+    var(--purple-dark) 60%,
+    var(--purple-mid) 100%
+  );
+  padding: 2.5rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid rgba(168, 85, 247, 0.25);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  right: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(249, 115, 22, 0.15) 0%,
+    transparent 70%
+  );
+}
+
+.hero-logo {
+  height: 52px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  animation: logo-in 0.5s 0.2s ease both;
+}
+
+@keyframes logo-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-divider {
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168, 85, 247, 0.8),
+    transparent
+  );
+  border-radius: 2px;
+}
+
+.hero-appname {
+  font-family: "Syne", sans-serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  text-align: center;
+  animation: logo-in 0.5s 0.3s ease both;
+}
+
+.hero-appname span {
+  color: var(--orange);
+  text-shadow: 0 0 24px rgba(249, 115, 22, 0.6);
+}
+
+.hero-sub {
+  font-size: 12px;
+  color: #c4b5fd;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-weight: 300;
+  animation: logo-in 0.5s 0.4s ease both;
+}
+
+/* Formulario */
+.form-area {
+  padding: 2rem 2rem 2.25rem;
+}
+
+.form-title {
+  font-family: "Syne", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.3px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 1.1rem;
+}
+
+body.auth label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4b5fd;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+body.auth input[type="text"],
+body.auth input[type="email"],
+body.auth input[type="password"] {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--white);
+  font-family: "DM Sans", sans-serif;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+body.auth input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+body.auth input:focus {
+  border-color: var(--orange);
+  background: rgba(249, 115, 22, 0.08);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+body.auth .error-message {
+  font-size: 12px;
+  color: #fca5a5;
+  display: none;
+  margin-top: 2px;
+}
+
+body.auth .error-message.visible {
+  display: block;
+}
+
+/* Botón principal */
+.button {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: var(--white);
+  font-family: "Syne", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+  transition:
+    transform 0.12s,
+    box-shadow 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(249, 115, 22, 0.6);
+}
+
+.button:hover::after {
+  transform: translateX(100%);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+/* Enlaces cruzados (login ↔ registro) */
+.signup-link,
+.login-link {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(196, 181, 253, 0.7);
+}
+
+.signup-link a,
+.login-link a {
+  color: var(--orange);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.signup-link a:hover,
+.login-link a:hover {
+  color: #fdba74;
+}
+
+/* ---- Ajustes de densidad del registro ---- */
+body.pagina-register .hero {
+  padding: 2.25rem 2rem 1.75rem;
+  gap: 10px;
+}
+
+body.pagina-register .hero-logo {
+  height: 48px;
+}
+
+body.pagina-register .hero-appname {
+  font-size: 44px;
+}
+
+body.pagina-register .form-area {
+  padding: 1.75rem 2rem 2rem;
+}
+
+body.pagina-register .form-title {
+  margin-bottom: 1.25rem;
+}
+
+body.pagina-register .form-group {
+  margin-bottom: 1rem;
+}
+
+/* ---- Animaciones de entrada por página ---- */
+body.pagina-login .form-group:nth-child(1) {
+  animation: card-in 0.4s 0.45s ease both;
+}
+
+body.pagina-login .form-group:nth-child(2) {
+  animation: card-in 0.4s 0.55s ease both;
+}
+
+body.pagina-login .button {
+  animation: card-in 0.4s 0.65s ease both;
+}
+
+body.pagina-login .signup-link {
+  animation: card-in 0.4s 0.72s ease both;
+}
+
+body.pagina-register .form-group:nth-child(1) {
+  animation: card-in 0.4s 0.45s ease both;
+}
+
+body.pagina-register .form-group:nth-child(2) {
+  animation: card-in 0.4s 0.52s ease both;
+}
+
+body.pagina-register .form-group:nth-child(3) {
+  animation: card-in 0.4s 0.59s ease both;
+}
+
+body.pagina-register .form-group:nth-child(4) {
+  animation: card-in 0.4s 0.66s ease both;
+}
+
+body.pagina-register .button {
+  animation: card-in 0.4s 0.73s ease both;
+}
+
+body.pagina-register .login-link {
+  animation: card-in 0.4s 0.8s ease both;
+}
+
+/*
+==========================================
+  PÁGINA DE RESERVA (index)
+==========================================
+*/
+
+body.pagina-index .container {
+  max-width: 600px;
+  margin: 20px auto;
+  background: var(--purple-dark);
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(59, 7, 100, 0.5), 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+body.pagina-index .error-message {
+  background: rgba(252, 165, 165, 0.15);
+  color: #fca5a5;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+/* Indicador de pasos */
+.steps-indicator {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.step {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #c4b5fd;
+}
+
+.step.active {
+  background: var(--orange);
+  color: var(--white);
+}
+
+.step.completed {
+  background: var(--orange-dark);
+  color: var(--white);
+}
+
+/* Secciones */
+.seccion {
+  display: none;
+}
+
+.seccion.active {
+  display: block;
+}
+
+/* Campos */
+.campo {
+  margin-bottom: 16px;
+}
+
+.campo label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #c4b5fd;
+}
+
+/* Errores */
+.error-field {
+  color: #fca5a5;
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Botones */
+.btn {
+  padding: 10px 20px;
+  font-family: "Syne", sans-serif;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: var(--white);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: var(--white);
+}
+
+.navegacion {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Instrucciones */
+.instrucciones {
+  font-size: 0.85rem;
+  color: #c4b5fd;
+  margin: 0 0 12px;
+}
+
+/*
+==========================================
+  SECCIÓN 1: SELECTOR DE FECHAS
+==========================================
+*/
+
+.contenedor-fechas {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.fecha-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 80px;
+  padding: 8px;
+  border: 2px solid var(--orange);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fecha-btn:hover:not(.bloqueado):not(.seleccionado) {
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.fecha-btn.seleccionado {
+  background: var(--orange);
+  color: var(--white);
+}
+
+.fecha-btn.bloqueado {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: rgba(196, 181, 253, 0.5);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.fecha-dia {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.fecha-numero {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.fecha-mes {
+  font-size: 0.75rem;
+}
+
+/*
+==========================================
+  SECCIÓN 2: TABLA DE HORARIOS
+==========================================
+*/
+
+.seleccion-horario {
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--orange);
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.tabla-horarios-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 4px;
+}
+
+.tabla-horarios {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-horarios th,
+.tabla-horarios td {
+  padding: 10px 12px;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  color: var(--white);
+}
+
+.tabla-horarios th {
+  background: var(--purple-deep);
+  color: #c4b5fd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tabla-horarios .celda-hora {
+  width: 80px;
+  font-weight: 500;
+}
+
+.tabla-horarios .celda-estado {
+  text-align: center;
+}
+
+.tabla-horarios tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tabla-horarios tbody tr:hover:not(.bloqueado):not(.en-rango):not(.en-rango-hover) {
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.tabla-horarios tbody tr.bloqueado {
+  background: rgba(252, 165, 165, 0.1);
+  color: rgba(196, 181, 253, 0.5);
+  cursor: not-allowed;
+}
+
+.tabla-horarios tbody tr.inicio-seleccionado {
+  background: rgba(249, 115, 22, 0.3);
+  border-top: 3px solid var(--orange);
+}
+
+.tabla-horarios tbody tr.en-rango {
+  background: rgba(249, 115, 22, 0.3);
+}
+
+.tabla-horarios tbody tr.ultimo-en-rango {
+  border-bottom: 3px solid var(--orange);
+}
+
+.tabla-horarios tbody tr.en-rango-hover {
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.motivo-bloqueo {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #fca5a5;
+}
+
+/*
+==========================================
+  SECCIÓN 3: GRILLA DE EQUIPOS
+==========================================
+*/
+
+.grilla-equipos {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.equipo-item {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--orange);
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+  transition: all 0.2s;
+  padding: 6px;
+}
+
+.equipo-icono {
+  width: 100%;
+  height: 100%;
+}
+
+.equipo-item:hover:not(.no-disponible) {
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.equipo-item.no-disponible {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: rgba(196, 181, 253, 0.5);
+  cursor: not-allowed;
+}
+
+.equipo-item.seleccionado {
+  background: var(--orange);
+  color: var(--white);
+}
+
+/*
+==========================================
+  MIS RESERVAS
+==========================================
+*/
+
+body.pagina-reservas .container {
+  background-color: var(--purple-dark);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(59, 7, 100, 0.5), 0 4px 24px rgba(0, 0, 0, 0.3);
+  font-family: "DM Sans", sans-serif;
+  font-weight: bold;
+  color: var(--white);
+}
+
+.warning {
+  background-color: rgba(249, 115, 22, 0.15);
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+.booking-card {
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 4px;
+  padding: 15px;
+  margin: 15px 0;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.booking-card h3 {
+  margin-top: 0;
+  margin-bottom: 1em; /* conserva el margen por defecto que el reset elimina */
+  font-family: "Syne", sans-serif;
+  color: var(--white);
+}
+
+.booking-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.booking-detail {
+  padding: 5px;
+  color: #c4b5fd;
+}
+
+.error {
+  color: #fca5a5;
+  background-color: rgba(252, 165, 165, 0.15);
+  border: 1px solid rgba(252, 165, 165, 0.3);
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+.cancel-button {
+  background-color: var(--orange);
+  color: var(--white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-family: "Syne", sans-serif;
+  transition: background-color 0.3s;
+}
+
+.cancel-button:hover {
+  background-color: var(--orange-dark);
+}
+
+.cancel-button:disabled {
+  background-color: rgba(168, 85, 247, 0.3);
+  cursor: not-allowed;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 7, 100, 0.7);
+}
+
+.modal-content {
+  position: relative;
+  background: var(--purple-dark);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 24px 80px rgba(59, 7, 100, 0.5), 0 4px 24px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--white);
+  font-family: "Syne", sans-serif;
+  font-size: 1.25rem;
+}
+
+.modal-content p {
+  color: #c4b5fd;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+#modal-detalle-reserva {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  color: var(--white);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-secundario {
+  padding: 10px 20px;
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: "Syne", sans-serif;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-secundario:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.btn-peligro {
+  padding: 10px 20px;
+  border: none;
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: var(--white);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: "Syne", sans-serif;
+  transition: transform 0.12s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+}
+
+.btn-peligro:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(249, 115, 22, 0.6);
+}
+
+.btn-peligro:disabled {
+  background: rgba(168, 85, 247, 0.3);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Estado vacío */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #c4b5fd;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.btn-primario {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Syne", sans-serif;
+  transition: transform 0.12s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+}
+
+.btn-primario:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(249, 115, 22, 0.6);
+}

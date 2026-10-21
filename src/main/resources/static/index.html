@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/index.js" defer></script>
+  <title>MiCompu U</title>
+</head>
+<body class="pagina-index">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">MiCompu UNAB</div>
+    <div class="navbar-user">
+      <a href="reservas.html" class="navbar-link">Mis Reservas</a>
+      <span id="nombre-usuario"></span>
+      <div class="navbar-dropdown">
+        <button id="btn-cerrar-sesion" class="btn-cerrar-sesion">Cerrar sesión</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Reserva de Computadores</h1>
+    
+    <!-- Indicador de pasos -->
+    <div class="steps-indicator">
+      <div class="step active" data-step="1">1. Fecha</div>
+      <div class="step" data-step="2">2. Horario</div>
+      <div class="step" data-step="3">3. Equipo</div>
+    </div>
+
+    <!-- Mensaje de error global -->
+    <div id="error-global" class="error-message" hidden></div>
+
+    <form id="form-reserva">
+      <!-- Sección 1: Selector de fecha -->
+      <section id="seccion-fecha" class="seccion active">
+        <h2>Selecciona una fecha</h2>
+        <p class="instrucciones">Elige uno de los próximos 7 días disponibles. Los fines de semana y festivos están bloqueados.</p>
+        <div id="contenedor-fechas" class="contenedor-fechas"></div>
+        <span id="error-fecha" class="error-field"></span>
+        <div class="navegacion">
+          <button type="button" id="btn-siguiente-1" class="btn btn-primary" disabled>Siguiente</button>
+        </div>
+      </section>
+
+      <!-- Sección 2: Selector de bloque horario -->
+      <section id="seccion-horario" class="seccion">
+        <h2>Selecciona el horario</h2>
+        <p class="instrucciones">Haz clic para seleccionar inicio, luego clic para seleccionar fin. Doble clic en una celda para reserva de 30 min.</p>
+        <div class="seleccion-horario">
+          <span id="horario-seleccionado">Sin seleccionar</span>
+        </div>
+        <div class="tabla-horarios-container">
+          <table id="tabla-horarios" class="tabla-horarios">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-horarios"></tbody>
+          </table>
+        </div>
+        <span id="error-horario" class="error-field"></span>
+        <div class="navegacion">
+          <button type="button" id="btn-atras-2" class="btn btn-secondary">Atrás</button>
+          <button type="button" id="btn-siguiente-2" class="btn btn-primary" disabled>Siguiente</button>
+        </div>
+      </section>
+
+      <!-- Sección 3: Selección de equipo -->
+      <section id="seccion-equipo" class="seccion">
+        <h2>Selecciona un equipo</h2>
+        <p class="instrucciones">Los equipos en gris no están disponibles.</p>
+        <div id="grilla-equipos" class="grilla-equipos"></div>
+        <span id="error-equipo" class="error-field"></span>
+        <div class="navegacion">
+          <button type="button" id="btn-atras-3" class="btn btn-secondary">Atrás</button>
+          <button type="submit" id="btn-crear-reserva" class="btn btn-success" disabled>Crear Reserva</button>
+        </div>
+      </section>
+    </form>
+  </div>
+</body>
+</html>

@@ -6,7 +6,9 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import co.edu.unab.micompu.entity.Usuario;
@@ -21,12 +23,14 @@ public class UsuarioService {
     private final ConexionBD conexion;
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(ConexionBD conexion, UsuarioRepository usuarioRepository,
-            RolRepository rolRepository) {
+            RolRepository rolRepository, PasswordEncoder passwordEncoder) {
         this.conexion = conexion;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /** Devuelve todos los usuarios con su rol resuelto (asociación). */
@@ -58,9 +62,15 @@ public class UsuarioService {
         }
     }
 
-    /** Crea un usuario validando que el rol exista (transacción manual). */
+    /**
+     * Crea un usuario cifrando su contraseña con BCrypt y
+     * validando que el rol exista (transacción manual).
+     */
     public Usuario crear(Usuario usuario) {
         validar(usuario);
+        // BCrypt: la contraseña llega en texto plano y se guarda cifrada
+        // (hash con sal aleatoria); el texto plano nunca llega a la base.
+        usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
         try (Connection cn = conexion.obtener()) {
             // Transacción manual: la validación del rol y el insert deben ser atómicos.
             cn.setAutoCommit(false);
@@ -103,11 +113,14 @@ public class UsuarioService {
         }
     }
 
-    /** Actualiza un usuario (transacción manual). */
+    /** Actualiza un usuario cifrando la contraseña que trae la petición (transacción manual). */
     public Usuario actualizar(Integer idUsuario, Usuario usuario) {
         validarId(idUsuario);
         validar(usuario);
         usuario.setIdUsuario(idUsuario);
+        // BCrypt: la petición trae la contraseña en texto plano y se vuelve a
+        // cifrar con sal nueva (aunque el cliente reenvíe la misma contraseña).
+        usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
         try (Connection cn = conexion.obtener()) {
             cn.setAutoCommit(false);
             try {
@@ -171,6 +184,41 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Inicia la sesión de un usuario verificando sus credenciales
+     * contra la base de datos: 404 si el correo no está registrado
+     * (o el usuario está inactivo por borrado lógico) y 400 
+     * si la contraseña no coincide. La comparación se hace con
+     * {@link PasswordEncoder#matches} contra el hash BCrypt almacenado:
+     * nunca se compara texto plano ni se expone el hash.
+     */
+    public Usuario autenticar(String email, String password) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("El correo de la sesión es obligatorio.");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("La contraseña de la sesión es obligatoria.");
+        }
+        try (Connection cn = conexion.obtener()) {
+            Optional<Usuario> hallado = usuarioRepository.findByEmail(cn, email);
+            if (hallado.isEmpty() || !hallado.get().isEstado()) {
+                // Borrado lógico: para quien inicia sesión, un usuario inactivo ya no existe.
+                throw new NoSuchElementException(
+                        "No hay ningún usuario registrado con el correo " + email + ".");
+            }
+            Usuario usuario = hallado.get();
+            // BCrypt: matches compara la contraseña recibida contra el hash
+            // (y la sal) almacenado en password_hash, sin texto plano.
+            if (!passwordEncoder.matches(password, usuario.getPasswordHash())) {
+                throw new IllegalArgumentException("La contraseña es incorrecta.");
+            }
+            completarRol(cn, usuario);
+            return usuario;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error autenticando el usuario: " + e.getMessage(), e);
+        }
+    }
+
     /** Completa la asociación usuario–rol cargando el rol completo. */
     private void completarRol(Connection cn, Usuario usuario) throws SQLException {
         Integer idRol = usuario.getRol() != null ? usuario.getRol().getIdRol() : null;
@@ -195,7 +243,7 @@ public class UsuarioService {
             throw new IllegalArgumentException("El nombre del usuario es obligatorio.");
         }
         if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
-            throw new IllegalArgumentException("El hash de la contraseña es obligatorio.");
+            throw new IllegalArgumentException("La contraseña es obligatoria.");
         }
     }
 

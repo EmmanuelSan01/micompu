@@ -42,6 +42,16 @@ public class ValidadorReservas {
         this.reservaRepository = reservaRepository;
     }
 
+    /** Inicio del bloque fijo de almuerzo (lo expone {@code GET /api/configuracion-reservas}). */
+    public LocalTime getAlmuerzoInicio() {
+        return ALMUERZO_INICIO;
+    }
+
+    /** Fin del bloque fijo de almuerzo (lo expone {@code GET /api/configuracion-reservas}). */
+    public LocalTime getAlmuerzoFin() {
+        return ALMUERZO_FIN;
+    }
+
     /**
      * Validaciones 1 a 11 (locales, sin base de datos). Requiere que
      * {@code ReservaService.validar} ya haya comprobado la forma de la

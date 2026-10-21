@@ -1,4 +1,4 @@
-import { obtenerReservasDeUsuario, cancelarReserva, horaCorta } from './reservas.js';
+import { obtenerReservasDeUsuario, cancelarReserva, horaCorta, nombreTitleCase } from './reservas.js';
 
 // Usuario activo
 let usuarioActivo = null;
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Configurar usuario en navbar
-  document.getElementById('nombre-usuario').textContent = usuarioActivo.nombre || usuarioActivo.email;
+  document.getElementById('nombre-usuario').textContent = nombreTitleCase(usuarioActivo.nombre) || usuarioActivo.email;
 
   // Configurar cierre de sesion
   document.getElementById('btn-cerrar-sesion').addEventListener('click', cerrarSesion);

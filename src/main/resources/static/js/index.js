@@ -1,5 +1,6 @@
 import {
   diaIsoDeFecha, horaCorta, calcularDuracionMinutos,
+  nombreTitleCase, esSegundoClicEnLaMismaCelda,
   obtenerConfiguracion,
   listarEquipos, listarFranjas, listarReservas, franjasDelDia,
   verificarDisponibilidad, crearReserva
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Configurar usuario en estado y navbar
   estado.usuarioId = usuarioActivo.idUsuario;
-  document.getElementById('nombre-usuario').textContent = usuarioActivo.nombre || usuarioActivo.email;
+  document.getElementById('nombre-usuario').textContent = nombreTitleCase(usuarioActivo.nombre) || usuarioActivo.email;
 
   // Configurar cierre de sesión
   document.getElementById('btn-cerrar-sesion').addEventListener('click', cerrarSesion);
@@ -334,8 +335,9 @@ async function renderizarTablaHorarios() {
       tdEstado.textContent = '';
       tr.appendChild(tdEstado);
 
+      // Un solo evento de clic: la reserva de 30 minutos
+      // se arma con dos clics consecutivos en la misma celda.
       tr.addEventListener('click', () => seleccionarBloque(bloque.hora, index));
-      tr.addEventListener('dblclick', () => seleccionarBloqueDoble(bloque.hora, index));
       tr.addEventListener('mouseenter', () => handleHover(index));
       tr.addEventListener('mouseleave', () => handleHoverLeave());
     }
@@ -369,13 +371,13 @@ function seleccionarBloque(hora, index) {
   const bloques = generarBloques();
 
   if (!estado.horaInicio) {
-    // Primer clic: seleccionar inicio
     estado.horaInicio = hora;
     estado.horaFin = null;
     hoverIndex = null;
   } else if (!estado.horaFin) {
-    // Segundo clic: seleccionar fin
-    if (hora <= estado.horaInicio) {
+    if (esSegundoClicEnLaMismaCelda(estado.horaInicio, estado.horaFin, hora)) {
+      seleccionarReservaTreintaMinutos(hora, index);
+    } else if (hora < estado.horaInicio) {
       // Si selecciona antes del inicio, reiniciar
       estado.horaInicio = hora;
       estado.horaFin = null;
@@ -400,7 +402,11 @@ function seleccionarBloque(hora, index) {
   actualizarVisualizacionHorario();
 }
 
-function seleccionarBloqueDoble(hora, index) {
+/**
+ * Arma la reserva de 30 minutos de una celda.
+ * Se activa con dos clics consecutivos en la misma celda.
+ */
+function seleccionarReservaTreintaMinutos(hora, index) {
   const bloques = generarBloques();
   estado.horaInicio = hora;
 
@@ -527,7 +533,7 @@ function actualizarVisualizacionHorario() {
   if (estado.horaInicio && estado.horaFin) {
     elementos.horarioSeleccionado.textContent = `${estado.horaInicio} - ${estado.horaFin}`;
   } else {
-    elementos.horarioSeleccionado.textContent = `Inicio: ${estado.horaInicio} (selecciona fin)`;
+    elementos.horarioSeleccionado.textContent = `Inicio: ${estado.horaInicio} (selecciona fin o repite el clic para 30 min)`;
   }
 }
 

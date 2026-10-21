@@ -72,6 +72,29 @@ function calcularDuracionMinutos(horaInicio, horaFin) {
 }
 
 /*
+ * Presentación e interacción.
+ */
+function nombreTitleCase(nombre) {
+  if (!nombre) {
+    return nombre;
+  }
+  return nombre
+    .split(/\s+/)
+    .filter(parte => parte.length > 0)
+    .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1))
+    .join(' ');
+}
+
+/**
+ * El primer clic fija el inicio en la celda; si el inicio sigue siendo
+ * esa celda y aún no se ha fijado el fin, el clic anterior fue sobre
+ * ella misma (así se arma la reserva de 30 minutos).
+ */
+function esSegundoClicEnLaMismaCelda(horaInicio, horaFin, horaClicada) {
+  return Boolean(horaInicio) && !horaFin && horaClicada === horaInicio;
+}
+
+/*
  * Sesión y registro.
  */
 
@@ -181,6 +204,7 @@ async function cancelarReserva(idReserva) {
 export {
   obtenerConfiguracion,
   obtenerFechaHoy, aMinutos, horaCorta, diaIsoDeFecha, calcularDuracionMinutos,
+  nombreTitleCase, esSegundoClicEnLaMismaCelda,
   iniciarSesion, registrarUsuario,
   listarEquipos, listarFranjas, listarReservas, franjasDelDia, obtenerReservasDeUsuario,
   verificarDisponibilidad, crearReserva, cancelarReserva

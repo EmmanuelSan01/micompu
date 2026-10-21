@@ -211,7 +211,7 @@ La conexión se configura en `application.properties` (`db.url`, `db.usuario`, `
 
 ```
 micompu/
-├── DDL.sql                         # Esquema MySQL (6 tablas, FKs y ENUM dia_semana)
+├── DDL.sql                         # Esquema MySQL (6 tablas)
 ├── pom.xml
 └── src/main/
     ├── java/co/edu/unab/micompu/

@@ -225,3 +225,9 @@ micompu/
         ├── application.properties  # Conexión db.* y parámetros reservas.*
         └── static/                 # Interfaz web (HTML + CSS + JS vanilla)
 ```
+
+## ¿Preguntas?
+
+<p align="center">
+  <a href="https://deepwiki.com/EmmanuelSan01/micompu"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+</p>

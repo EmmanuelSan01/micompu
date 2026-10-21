@@ -1,3 +1,4 @@
+*.pem
 *.properties
 .gitattributes
 AGENTS.md

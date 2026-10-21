@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -71,6 +72,7 @@ public class UsuarioService {
         // BCrypt: la contraseña llega en texto plano y se guarda cifrada
         // (hash con sal aleatoria); el texto plano nunca llega a la base.
         usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+        usuario.setNombre(usuario.getNombre().toLowerCase(Locale.ROOT));
         try (Connection cn = conexion.obtener()) {
             // Transacción manual: la validación del rol y el insert deben ser atómicos.
             cn.setAutoCommit(false);
@@ -121,6 +123,7 @@ public class UsuarioService {
         // BCrypt: la petición trae la contraseña en texto plano y se vuelve a
         // cifrar con sal nueva (aunque el cliente reenvíe la misma contraseña).
         usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+        usuario.setNombre(usuario.getNombre().toLowerCase(Locale.ROOT));
         try (Connection cn = conexion.obtener()) {
             cn.setAutoCommit(false);
             try {

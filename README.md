@@ -111,14 +111,14 @@ erDiagram
         int id_rol FK
         varchar email UK
         varchar nombre
-        varchar password_hash "hash BCrypt"
+        varchar password_hash
         boolean estado
     }
     sala {
         int id_sala PK
         int id_responsable FK
         varchar nombre UK
-        tinyint capacidad "TINYINT UNSIGNED"
+        tinyint capacidad
         boolean estado
     }
     equipo {
@@ -137,7 +137,7 @@ erDiagram
     franja_clase {
         int id_franja_clase PK
         int id_sala FK
-        enum dia_semana "ISO-8601: 1=lunes a 7=domingo"
+        enum dia_semana
         time hora_inicio
         time hora_fin
         varchar motivo
@@ -145,7 +145,7 @@ erDiagram
     }
 ```
 
-Notas del esquema (ver `DDL.sql`):
+Notas del esquema (ver [DDL.sql](DDL.sql)):
 
 - Todas las FK son `ON UPDATE CASCADE ON DELETE RESTRICT`.
 - La columna `estado` implementa **borrado lógico**: los DELETE son `UPDATE … SET estado = FALSE`. La única excepción es `reserva` (sin columna `estado`), cuyo borrado es físico.

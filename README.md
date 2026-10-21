@@ -1,9 +1,11 @@
 # MiCompu · API REST de gestión de salas de cómputo (UNAB)
 
-![Java](https://img.shields.io/badge/Java-21-blue)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F)
-![MySQL](https://img.shields.io/badge/MySQL-Connector%2FJ-4479A1)
-![Persistencia](https://img.shields.io/badge/persistencia-JDBC%20nativo-orange)
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-21-blue" alt="Java">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/MySQL-Connector%2FJ-4479A1" alt="MySQL">
+  <img src="https://img.shields.io/badge/persistencia-JDBC%20nativo-orange" alt="Persistencia">
+</p>
 
 Proyecto académico: API REST para la gestión de las salas de cómputo de la UNAB — roles, usuarios, salas, equipos, reservas y franjas de clase — sobre MySQL, con una interfaz web ligera incluida.
 
@@ -28,6 +30,66 @@ Paquetes en capas: `controller` → `service` → `repository`, con `entity` y `
 - **`repository`** — Un repositorio por tabla; reciben la `Connection` como primer argumento. `ConexionBD` abre conexiones con `DriverManager`.
 - **`entity`** — POJOs Lombok (`@Data`, `@Builder`).
 - **`config`** — `ConfiguracionReservas` (parámetros del curso, sobrescribibles en arranque con `reservas.*`) y `ConfiguracionSeguridad` (BCrypt + cadena de filtros provisional).
+
+## Diagrama entidad–relación
+
+```mermaid
+erDiagram
+    rol ||--o{ usuario : tiene
+    usuario ||--o{ sala : "responsable de"
+    usuario ||--o{ reserva : realiza
+    equipo ||--o{ reserva : ocupa
+    sala ||--o{ equipo : contiene
+    sala ||--o{ franja_clase : agenda
+
+    rol {
+        int id_rol PK
+        varchar nombre
+        boolean estado
+    }
+    usuario {
+        int id_usuario PK
+        int id_rol FK
+        varchar email UK
+        varchar nombre
+        varchar password_hash
+        boolean estado
+    }
+    sala {
+        int id_sala PK
+        int id_responsable FK
+        varchar nombre UK
+        tinyint capacidad
+        boolean estado
+    }
+    equipo {
+        int id_equipo PK
+        int id_sala FK
+        boolean estado
+    }
+    reserva {
+        int id_reserva PK
+        int id_usuario FK
+        int id_equipo FK
+        date fecha
+        time hora_inicio
+        time hora_fin
+    }
+    franja_clase {
+        int id_franja_clase PK
+        int id_sala FK
+        enum dia_semana
+        time hora_inicio
+        time hora_fin
+        varchar motivo
+        boolean estado
+    }
+```
+
+Notas del esquema (ver [DDL.sql](DDL.sql)):
+
+- Todas las FK son `ON UPDATE CASCADE ON DELETE RESTRICT`.
+- La columna `estado` implementa **borrado lógico**: los DELETE son `UPDATE … SET estado = FALSE`. La única excepción es `reserva` (sin columna `estado`), cuyo borrado es físico.
 
 ## Diagrama de clases (UML)
 
@@ -89,66 +151,6 @@ Tipos de relación (según el modelado documentado en las entidades):
 - **Asociación** (`-->`): `usuario→rol`, `sala→responsable`, `reserva→usuario`.
 - **Agregación** (`o--`): `reserva→equipo`.
 - **Composición** (`*--`): `equipo→sala` y `franja_clase→sala`.
-
-## Diagrama entidad–relación
-
-```mermaid
-erDiagram
-    rol ||--o{ usuario : tiene
-    usuario ||--o{ sala : "responsable de"
-    usuario ||--o{ reserva : realiza
-    equipo ||--o{ reserva : ocupa
-    sala ||--o{ equipo : contiene
-    sala ||--o{ franja_clase : agenda
-
-    rol {
-        int id_rol PK
-        varchar nombre
-        boolean estado
-    }
-    usuario {
-        int id_usuario PK
-        int id_rol FK
-        varchar email UK
-        varchar nombre
-        varchar password_hash
-        boolean estado
-    }
-    sala {
-        int id_sala PK
-        int id_responsable FK
-        varchar nombre UK
-        tinyint capacidad
-        boolean estado
-    }
-    equipo {
-        int id_equipo PK
-        int id_sala FK
-        boolean estado
-    }
-    reserva {
-        int id_reserva PK
-        int id_usuario FK
-        int id_equipo FK
-        date fecha
-        time hora_inicio
-        time hora_fin
-    }
-    franja_clase {
-        int id_franja_clase PK
-        int id_sala FK
-        enum dia_semana
-        time hora_inicio
-        time hora_fin
-        varchar motivo
-        boolean estado
-    }
-```
-
-Notas del esquema (ver [DDL.sql](DDL.sql)):
-
-- Todas las FK son `ON UPDATE CASCADE ON DELETE RESTRICT`.
-- La columna `estado` implementa **borrado lógico**: los DELETE son `UPDATE … SET estado = FALSE`. La única excepción es `reserva` (sin columna `estado`), cuyo borrado es físico.
 
 ## API REST
 

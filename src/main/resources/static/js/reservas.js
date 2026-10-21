@@ -1,31 +1,46 @@
 /**
- * Reglas y operaciones de reservas de la interfaz.
- *
- * Las constantes son el espejo de los defaults de config/ConfiguracionReservas
- * (más el bloque fijo de almuerzo de service/ValidadorReservas): solo guían al
- * usuario en el asistente. La autoridad es siempre el backend, que aplica las
- * 15 validaciones con la configuración vigente y responde con el mensaje exacto
- * cuando algo no cumple (los mensajes de error se muestran tal cual llegan).
+ * Operaciones y reglas de reservas de la interfaz.
  */
 import { obtener, crear, eliminar } from './api.js';
 
-const FECHA_INICIO_SEMESTRE = '2026-07-06';
-const FECHA_CIERRE_SEMESTRE = '2026-10-31';
-const MAX_DIAS_ANTICIPACION = 7;
-const MIN_DURACION_MINUTOS = 30;
-const MAX_DURACION_HORAS = 4;
-const DIAS_BLOQUEADOS = [6, 7]; // ISO-8601: 6 = sábado, 7 = domingo.
-const FECHAS_BLOQUEADAS = ['2026-07-13', '2026-07-20', '2026-08-07', '2026-08-17', '2026-10-12'];
-const HORA_APERTURA = '08:00';
-const HORA_CIERRE = '20:00';
-const HORA_INICIO_ALMUERZO = '13:00';
-const HORA_FIN_ALMUERZO = '14:00';
+/*
+ * Configuración vigente (caché por carga de página).
+ *
+ * La API serializa las horas con segundos ("08:00:00"); se normalizan a
+ * "HH:MM" para que el asistente compare cadenas simples, y las horas se
+ * comparan en minutos para no depender del formato.
+ */
+let configCache = null;
+
+/**
+ * Reglas vigentes de las reservas: semestre, anticipación, duraciones,
+ * días y fechas bloqueados, apertura/cierre y almuerzo. Se piden a la API
+ * una sola vez por carga de página (si un administrador cambia la
+ * configuración en caliente, la siguiente carga de la página la recoge).
+ */
+async function obtenerConfiguracion() {
+  if (!configCache) {
+    const reglas = await obtener('configuracion-reservas');
+    configCache = {
+      fechaInicioSemestre: reglas.fechaInicioSemestre,
+      fechaCierreSemestre: reglas.fechaCierreSemestre,
+      maxDiasAnticipacion: reglas.maxDiasAnticipacion,
+      maxReservasActivas: reglas.maxReservasActivas,
+      minDuracionMinutos: reglas.minDuracionMinutos,
+      maxDuracionHoras: reglas.maxDuracionHoras,
+      diasBloqueados: reglas.diasBloqueados,
+      fechasBloqueadas: reglas.fechasBloqueadas,
+      horaApertura: horaCorta(reglas.horaApertura),
+      horaCierre: horaCorta(reglas.horaCierre),
+      horaInicioAlmuerzo: horaCorta(reglas.horaInicioAlmuerzo),
+      horaFinAlmuerzo: horaCorta(reglas.horaFinAlmuerzo)
+    };
+  }
+  return configCache;
+}
 
 /*
  * Helpers de fecha y hora.
- *
- * La API serializa las horas con segundos ("08:00:00"); la interfaz trabaja
- * con "HH:MM" y las compara en minutos para no depender del formato.
  */
 
 /** Fecha de hoy en forma local "YYYY-MM-DD". */
@@ -164,10 +179,7 @@ async function cancelarReserva(idReserva) {
 }
 
 export {
-  FECHA_INICIO_SEMESTRE, FECHA_CIERRE_SEMESTRE,
-  MAX_DIAS_ANTICIPACION, MIN_DURACION_MINUTOS, MAX_DURACION_HORAS,
-  DIAS_BLOQUEADOS, FECHAS_BLOQUEADAS,
-  HORA_APERTURA, HORA_CIERRE, HORA_INICIO_ALMUERZO, HORA_FIN_ALMUERZO,
+  obtenerConfiguracion,
   obtenerFechaHoy, aMinutos, horaCorta, diaIsoDeFecha, calcularDuracionMinutos,
   iniciarSesion, registrarUsuario,
   listarEquipos, listarFranjas, listarReservas, franjasDelDia, obtenerReservasDeUsuario,

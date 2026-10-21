@@ -1,11 +1,6 @@
 import {
-  FECHA_INICIO_SEMESTRE, FECHA_CIERRE_SEMESTRE,
-  MAX_DIAS_ANTICIPACION,
-  DIAS_BLOQUEADOS, FECHAS_BLOQUEADAS,
-  HORA_APERTURA, HORA_CIERRE,
-  HORA_INICIO_ALMUERZO, HORA_FIN_ALMUERZO,
-  MIN_DURACION_MINUTOS, MAX_DURACION_HORAS,
   diaIsoDeFecha, horaCorta, calcularDuracionMinutos,
+  obtenerConfiguracion,
   listarEquipos, listarFranjas, listarReservas, franjasDelDia,
   verificarDisponibilidad, crearReserva
 } from './reservas.js';
@@ -23,6 +18,10 @@ const estado = {
 // Usuario activo
 let usuarioActivo = null;
 
+// Reglas vigentes de las reservas (semestre, anticipación, bloqueos,
+// horario y almuerzo), consultadas a la API al inicializar
+let config = null;
+
 // Elementos del DOM
 let elementos = {};
 
@@ -36,7 +35,7 @@ let franjasDiaActual = [];
 let franjasCache = null;
 
 // Inicialización
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Validar sesión activa
   usuarioActivo = JSON.parse(sessionStorage.getItem('usuario_activo'));
 
@@ -54,6 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cachearElementos();
   configurarEventos();
+
+  // Reglas vigentes de la API: sin ellas no se puede armar el asistente
+  // (ni el selector de fechas ni los bloques del horario).
+  try {
+    config = await obtenerConfiguracion();
+  } catch (error) {
+    mostrarErrorGlobal('No fue posible cargar las reglas de las reservas: ' + error.message);
+    return;
+  }
+
   renderizarSelectorFecha();
 });
 
@@ -114,16 +123,16 @@ function renderizarSelectorFecha() {
 
   elementos.contenedorFechas.innerHTML = '';
 
-  // Generar los próximos 7 días
-  for (let i = 1; i <= MAX_DIAS_ANTICIPACION; i++) {
+  // Generar los próximos días según la anticipación máxima vigente
+  for (let i = 1; i <= config.maxDiasAnticipacion; i++) {
     const fecha = new Date(hoy);
     fecha.setDate(hoy.getDate() + i);
 
     const fechaStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
     const diaSemana = diaIsoDeFecha(fechaStr);
-    const esFinDeSemana = DIAS_BLOQUEADOS.includes(diaSemana);
-    const esFestivo = FECHAS_BLOQUEADAS.includes(fechaStr);
-    const fueraDeSemestre = fechaStr < FECHA_INICIO_SEMESTRE || fechaStr > FECHA_CIERRE_SEMESTRE;
+    const esFinDeSemana = config.diasBloqueados.includes(diaSemana);
+    const esFestivo = config.fechasBloqueadas.includes(fechaStr);
+    const fueraDeSemestre = fechaStr < config.fechaInicioSemestre || fechaStr > config.fechaCierreSemestre;
 
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -226,8 +235,8 @@ async function obtenerFranjasDelDia() {
 
 function generarBloques() {
   const bloques = [];
-  const [horaApertura] = HORA_APERTURA.split(':').map(Number);
-  const [horaCierre] = HORA_CIERRE.split(':').map(Number);
+  const [horaApertura] = config.horaApertura.split(':').map(Number);
+  const [horaCierre] = config.horaCierre.split(':').map(Number);
 
   for (let h = horaApertura; h < horaCierre; h++) {
     bloques.push({ hora: `${String(h).padStart(2, '0')}:00`, minutos: 0 });
@@ -238,8 +247,8 @@ function generarBloques() {
 }
 
 function obtenerMotivoBloqueado(hora, franjasDia) {
-  // Verificar almuerzo
-  if (hora >= HORA_INICIO_ALMUERZO && hora < HORA_FIN_ALMUERZO) {
+  // Verificar almuerzo (regla fija del backend)
+  if (hora >= config.horaInicioAlmuerzo && hora < config.horaFinAlmuerzo) {
     return 'Horario de almuerzo';
   }
 
@@ -373,7 +382,7 @@ function seleccionarBloque(hora, index) {
       if (index < bloques.length - 1) {
         estado.horaFin = bloques[index + 1].hora;
       } else {
-        estado.horaFin = HORA_CIERRE;
+        estado.horaFin = config.horaCierre;
       }
       hoverIndex = null;
       validarRangoHorario();
@@ -395,7 +404,7 @@ function seleccionarBloqueDoble(hora, index) {
   if (index < bloques.length - 1) {
     estado.horaFin = bloques[index + 1].hora;
   } else {
-    estado.horaFin = HORA_CIERRE;
+    estado.horaFin = config.horaCierre;
   }
 
   hoverIndex = null;
@@ -410,14 +419,14 @@ function validarRangoHorario() {
   if (!estado.horaInicio || !estado.horaFin) return;
 
   // Validación 7: Hora inicio >= apertura
-  if (estado.horaInicio < HORA_APERTURA) {
-    elementos.errorHorario.textContent = `La hora de inicio no puede ser anterior a las ${HORA_APERTURA}`;
+  if (estado.horaInicio < config.horaApertura) {
+    elementos.errorHorario.textContent = `La hora de inicio no puede ser anterior a las ${config.horaApertura}`;
     return;
   }
 
   // Validación 8: Hora fin <= cierre
-  if (estado.horaFin > HORA_CIERRE) {
-    elementos.errorHorario.textContent = `La hora de fin no puede ser posterior a las ${HORA_CIERRE}`;
+  if (estado.horaFin > config.horaCierre) {
+    elementos.errorHorario.textContent = `La hora de fin no puede ser posterior a las ${config.horaCierre}`;
     return;
   }
 
@@ -429,21 +438,21 @@ function validarRangoHorario() {
 
   // Validación 9: Duración mínima
   const duracionMinutos = calcularDuracionMinutos(estado.horaInicio, estado.horaFin);
-  if (duracionMinutos < MIN_DURACION_MINUTOS) {
-    elementos.errorHorario.textContent = `La duración mínima de la reserva es de ${MIN_DURACION_MINUTOS} minutos`;
+  if (duracionMinutos < config.minDuracionMinutos) {
+    elementos.errorHorario.textContent = `La duración mínima de la reserva es de ${config.minDuracionMinutos} minutos`;
     return;
   }
 
   // Validación 10: Duración máxima
-  if (duracionMinutos > MAX_DURACION_HORAS * 60) {
-    elementos.errorHorario.textContent = `La duración máxima de la reserva es de ${MAX_DURACION_HORAS} horas`;
+  if (duracionMinutos > config.maxDuracionHoras * 60) {
+    elementos.errorHorario.textContent = `La duración máxima de la reserva es de ${config.maxDuracionHoras} horas`;
     return;
   }
 
-  // Validación 11: No solapar almuerzo
-  const solapaAlmuerzo = !(estado.horaFin <= HORA_INICIO_ALMUERZO || estado.horaInicio >= HORA_FIN_ALMUERZO);
+  // Validación 11: No solapar almuerzo (regla fija del backend)
+  const solapaAlmuerzo = !(estado.horaFin <= config.horaInicioAlmuerzo || estado.horaInicio >= config.horaFinAlmuerzo);
   if (solapaAlmuerzo) {
-    elementos.errorHorario.textContent = `El horario seleccionado solapa con el bloque de almuerzo (${HORA_INICIO_ALMUERZO}-${HORA_FIN_ALMUERZO})`;
+    elementos.errorHorario.textContent = `El horario seleccionado solapa con el bloque de almuerzo (${config.horaInicioAlmuerzo}-${config.horaFinAlmuerzo})`;
     return;
   }
 
@@ -478,8 +487,8 @@ function actualizarVisualizacionHorario() {
   let indexFin = null;
 
   if (estado.horaFin) {
-    // Si horaFin es HORA_CIERRE, el índice es el último bloque
-    if (estado.horaFin === HORA_CIERRE) {
+    // Si horaFin es la hora de cierre, el índice es el último bloque
+    if (estado.horaFin === config.horaCierre) {
       indexFin = bloques.length;
     } else {
       indexFin = bloques.findIndex(b => b.hora === estado.horaFin);

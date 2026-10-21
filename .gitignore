@@ -1,3 +1,4 @@
+*.pem
 *.properties
 .gitattributes
 AGENTS.md
@@ -34,6 +35,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### SQL ###
-*.sql

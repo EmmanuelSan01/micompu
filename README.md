@@ -148,9 +148,9 @@ classDiagram
 
 Tipos de relación (según el modelado documentado en las entidades):
 
-- **Asociación** (`-->`): `usuario→rol`, `sala→responsable`, `reserva→usuario`.
-- **Agregación** (`o--`): `reserva→equipo`.
-- **Composición** (`*--`): `equipo→sala` y `franja_clase→sala`.
+- **Asociación** (`━━>`): `usuario━━>rol`, `sala━━>responsable`, `reserva━━>usuario`.
+- **Agregación** (`◇───`): `reserva◇───equipo`.
+- **Composición** (`◆───`): `equipo◆───sala` y `franja_clase◆───sala`.
 
 ## Reglas de negocio
 

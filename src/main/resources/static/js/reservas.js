@@ -86,9 +86,9 @@ async function iniciarSesion(email, password) {
  */
 async function registrarUsuario(nombre, email, password) {
   const roles = await obtener('roles');
-  const rol = roles.find(r => r.nombre.toLowerCase() === 'estudiante') || roles[0];
+  const rol = roles.find(r => r.nombre.toLowerCase() === 'estudiante');
   if (!rol) {
-    throw new Error('No hay roles registrados: no es posible crear cuentas nuevas.');
+    throw new Error('No existe el rol "estudiante": no es posible crear cuentas nuevas.');
   }
   return crear('usuarios', {
     nombre,

@@ -270,7 +270,7 @@ async function renderizarTablaHorarios() {
 
   // La selección de horario se conserva si ya existía de una visita previa.
   hoverIndex = null;
-  elementos.btnSiguiente2.disabled = !(estado.horaInicio && estado.horaFin);
+  validarRangoHorario();
 
   // Agrupar bloques bloqueados por motivo
   const bloquesConMotivo = bloques.map((bloque, index) => {
@@ -322,7 +322,10 @@ async function renderizarTablaHorarios() {
       if (primerIndiceGrupo.has(index)) {
         const rowspan = primerIndiceGrupo.get(index);
         tdEstado.rowSpan = rowspan;
-        tdEstado.innerHTML = `<span class="motivo-bloqueo">${bloque.motivo}</span>`;
+        const span = document.createElement('span');
+        span.className = 'motivo-bloqueo';
+        span.textContent = bloque.motivo;
+        tdEstado.appendChild(span);
         tr.appendChild(tdEstado);
       }
       // Si no es el primero, no agregar la celda (ya está cubierta por rowspan)
